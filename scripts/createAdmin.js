@@ -4,8 +4,8 @@ const logger = require('../src/utils/logger');
 
 async function createAdminUser() {
   try {
-    const adminEmail = 'f@pachoman.com';
-    const adminPassword = 'C@rlos2025';
+    const adminEmail = process.env.ADMIN_EMAIL || 'admin@example.com';
+    const adminPassword = process.env.ADMIN_PASSWORD || 'YourSecurePassword123!';
     
     // Check if admin already exists
     const existingAdmin = await User.findOne({ where: { email: adminEmail } });

@@ -15,7 +15,7 @@ Project envisioned, created and prepared for the WeMakeDevs hackathon 2025 by Fr
 - Password hashing with bcrypt
 - Admin authentication protection
 
-#### 2. **Admin Dashboard** (http://155.138.165.47:3000/admin)
+#### 2. **Admin Dashboard** (http://localhost:3000/admin)
 - **Dashboard Tab**: Real-time statistics (users, documents, alerts, topics)
 - **Topic Areas Tab**: Create/edit/delete topic areas with keywords
 - **Sources Tab**: Manage RSS feeds and PDF sources with "Process Now" functionality
@@ -185,13 +185,13 @@ franciscomoney-intel/
 ```
 
 ### 🔐 Admin Credentials
-- Email: `f@pachoman.com`
-- Password: `C@rlos2025`
+- Email: `admin@example.com`
+- Password: `YourSecurePassword123!`
 
 ### 🌐 Access URLs
-- Main App: http://155.138.165.47:3000
-- Admin Panel: http://155.138.165.47:3000/admin
-- Example Report: http://155.138.165.47:3000/A002.html
+- Main App: http://localhost:3000
+- Admin Panel: http://localhost:3000/admin
+- Example Report: http://localhost:3000/A001.html
 
 ### ⏳ Pending Implementation
 

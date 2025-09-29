@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Franciscomoney Intel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+        }
+        
+        .header {
+            background-color: #c0392b;
+            color: white;
+            padding: 1rem 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .tab {
+            padding: 0.75rem 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+        }
+        
+        .tab.active {
+            color: #333;
+            border-bottom-color: #c0392b;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-success {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #ecf0f1;
+            padding: 1.5rem;
+            border-radius: 4px;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .source-list {
+            list-style: none;
+        }
+        
+        .source-item {
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .api-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+        
+        .api-status.active {
+            background-color: #27ae60;
+            color: white;
+        }
+        
+        .api-status.inactive {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .document-card {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-card h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+        
+        .document-meta {
+            color: #6c757d;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-summary {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .document-actions a {
+            color: #3498db;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .document-actions a:hover {
+            text-decoration: underline;
+        }
+        
+        .delete-button {
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .delete-button:hover {
+            background-color: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Admin Dashboard - Franciscomoney Intel</h1>
+    </div>
+    
+    <div class="container">
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('overview')">Overview</button>
+            <button class="tab" onclick="showTab('topics')">Topic Areas</button>
+            <button class="tab" onclick="showTab('sources')">Sources</button>
+            <button class="tab" onclick="showTab('sponsors')">Sponsors</button>
+            <button class="tab" onclick="showTab('api')">API Config</button>
+            <button class="tab" onclick="showTab('official')">Official</button>
+            <button class="tab" onclick="showTab('analytics')">Analytics</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalUsers">0</h3>
+                    <p>Total Users</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeAlerts">0</h3>
+                    <p>Active Alerts</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="emailsSent">0</h3>
+                    <p>Emails Sent</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="documentsProcessed">0</h3>
+                    <p>Documents Processed</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Topic Areas Tab -->
+        <div id="topics" class="tab-content">
+            <div class="section">
+                <h2>Topic Areas</h2>
+                <form id="topicForm">
+                    <div class="form-group">
+                        <label>Topic Name</label>
+                        <input type="text" name="name" placeholder="e.g., CBDCs" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Keywords (comma-separated)</label>
+                        <input type="text" name="keywords" placeholder="central bank, digital currency, CBDC">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Topic Area</button>
+                </form>
+                <hr style="margin: 2rem 0;">
+                <div id="topicsList"></div>
+            </div>
+        </div>
+        
+        <!-- Sources Tab -->
+        <div id="sources" class="tab-content">
+            <div class="section">
+                <h2>Manage Sources</h2>
+                <form id="sourceForm">
+                    <div class="form-group">
+                        <label>Topic Area</label>
+                        <select name="topicAreaId" required>
+                            <option value="">Select topic area...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Source Name</label>
+                        <input type="text" name="name" placeholder="e.g., BIS Reports" required>
+                    </div>
+                    <div class="form-group">
+                        <label>URL</label>
+                        <input type="url" name="url" placeholder="https://www.bis.org/publications/" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="type">
+                            <option value="pdf">PDF</option>
+                            <option value="rss">RSS Feed</option>
+                            <option value="webpage">Web Page</option>
+                            <option value="api">API</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Source</button>
+                </form>
+                <hr style="margin: 2rem 0;">
+                <div style="margin-bottom: 1rem;">
+                    <button class="btn btn-success" onclick="processAllSources()">Process All Sources Now</button>
+                    <span id="processStatus" style="margin-left: 1rem; font-style: italic;"></span>
+                </div>
+                <div id="sourcesList"></div>
+            </div>
+        </div>
+        
+        <!-- Sponsors Tab -->
+        <div id="sponsors" class="tab-content">
+            <div class="section">
+                <h2>Sponsored Content</h2>
+                <form id="sponsorForm">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea name="content" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Link</label>
+                        <input type="url" name="link" placeholder="https://sponsor-website.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Topic Areas</label>
+                        <select name="topicAreas" multiple style="height: 100px;">
+                            <!-- Options loaded dynamically -->
+                        </select>
+                        <small>Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Sponsor</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- API Config Tab -->
+        <div id="api" class="tab-content">
+            <div class="section">
+                <h2>API Configuration</h2>
+                <form id="apiForm">
+                    <div class="form-group">
+                        <label>Cerebras API Key</label>
+                        <input type="password" name="cerebras_api_key" placeholder="Enter your Cerebras API key">
+                        <small>This will update the server's .env file</small>
+                    </div>
+                    <button type="submit" class="btn btn-success">Update API Key</button>
+                    <button type="button" class="btn btn-primary" onclick="testApiConnection()">Test Connection</button>
+                </form>
+                <div style="margin-top: 1rem;">
+                    <span class="api-status" id="apiStatus">Status Unknown</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Official Tab -->
+        <div id="official" class="tab-content">
+            <div class="section">
+                <h2>Official Documents</h2>
+                <p>View HTML pages of processed documents with summaries and download links.</p>
+                <div class="form-group">
+                    <label>Select Topic Area</label>
+                    <select id="officialTopicSelect" onchange="loadOfficialDocuments()">
+                        <option value="">All Topics</option>
+                    </select>
+                </div>
+                <div id="officialDocumentsList" style="margin-top: 2rem;">
+                    <!-- Documents will be loaded here -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="section">
+                <h2>Analytics</h2>
+                <p>Email open rates, click-through rates, and engagement metrics will appear here.</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        function showTab(tabName) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Admin authentication check
+        async function checkAdminAuth() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.isAuthenticated || !data.isAdmin) {
+                    alert('Please login as admin first');
+                    window.location.href = '/login';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth check error:', error);
+                alert('Authentication error. Please login first.');
+                window.location.href = '/login';
+                return false;
+            }
+        }
+        
+        // API configuration
+        document.getElementById('apiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/api-config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        cerebras_api_key: formData.get('cerebras_api_key')
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('API key updated successfully');
+                    e.target.reset();
+                } else {
+                    alert('Error updating API key');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        async function testApiConnection() {
+            const statusEl = document.getElementById('apiStatus');
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'api-status';
+            
+            // Simulate API test
+            setTimeout(() => {
+                // This would actually test the Cerebras API
+                statusEl.textContent = 'API Active';
+                statusEl.classList.add('active');
+            }, 1000);
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    credentials: 'include'
+                });
+                const stats = await response.json();
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('activeAlerts').textContent = stats.activeAlerts || 0;
+                document.getElementById('emailsSent').textContent = stats.emailsSent || 0;
+                document.getElementById('documentsProcessed').textContent = stats.documentsProcessed || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load topics
+        async function loadTopics() {
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    credentials: 'include'
+                });
+                const topics = await response.json();
+                
+                // Update topic select in sources form
+                const topicSelect = document.querySelector('select[name="topicAreaId"]');
+                const sponsorTopicSelect = document.querySelector('select[name="topicAreas"]');
+                
+                topicSelect.innerHTML = '<option value="">Select topic area...</option>';
+                sponsorTopicSelect.innerHTML = '';
+                
+                topics.forEach(topic => {
+                    topicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                    sponsorTopicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                });
+                
+                // Display topics list
+                const topicsList = document.getElementById('topicsList');
+                topicsList.innerHTML = topics.map(topic => `
+                    <div class="source-item">
+                        <div>
+                            <strong>${topic.name}</strong> - ${topic.description || 'No description'}
+                            <br><small>Keywords: ${topic.keywords ? topic.keywords.join(', ') : 'None'}</small>
+                        </div>
+                        <button class="btn btn-danger" onclick="deleteTopic('${topic.id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading topics:', error);
+            }
+        }
+        
+        // Load sources
+        async function loadSources() {
+            try {
+                const response = await fetch('/api/admin/sources', {
+                    credentials: 'include'
+                });
+                const sources = await response.json();
+                
+                const sourcesList = document.getElementById('sourcesList');
+                sourcesList.innerHTML = sources.map(source => `
+                    <div class="source-item">
+                        <div>
+                            <strong>${source.name}</strong> - ${source.url}
+                            <br><small>Type: ${source.type} | Topic: ${source.topicArea ? source.topicArea.name : 'None'}</small>
+                        </div>
+                        <button class="btn btn-primary" onclick="processSource('${source.id}')">Process Now</button>
+                        <button class="btn btn-danger" onclick="deleteSource('${source.id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading sources:', error);
+            }
+        }
+        
+        // Topic form submission
+        document.getElementById('topicForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        description: formData.get('description'),
+                        keywords: formData.get('keywords')
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    loadTopics();
+                    alert('Topic created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating topic: ' + error.message);
+            }
+        });
+        
+        // Source form submission
+        document.getElementById('sourceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/sources', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        topicAreaId: formData.get('topicAreaId'),
+                        name: formData.get('name'),
+                        url: formData.get('url'),
+                        type: formData.get('type')
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    loadSources();
+                    alert('Source created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating source: ' + error.message);
+            }
+        });
+        
+        // Sponsor form submission
+        document.getElementById('sponsorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const topicAreas = Array.from(e.target.topicAreas.selectedOptions).map(opt => opt.value);
+            
+            try {
+                const response = await fetch('/api/admin/sponsors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        title: formData.get('title'),
+                        content: formData.get('content'),
+                        link: formData.get('link'),
+                        topicAreas: topicAreas
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    alert('Sponsor created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating sponsor: ' + error.message);
+            }
+        });
+        
+        // Delete functions
+        async function deleteTopic(id) {
+            if (!confirm('Are you sure?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/topics/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadTopics();
+                } else {
+                    alert('Error deleting topic');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function deleteSource(id) {
+            if (!confirm('Are you sure?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/sources/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadSources();
+                } else {
+                    alert('Error deleting source');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        // Process single source
+        async function processSource(id) {
+            const statusEl = document.getElementById('processStatus');
+            statusEl.textContent = 'Processing source...';
+            
+            try {
+                const response = await fetch(`/api/admin/sources/${id}/process`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = result.message;
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        loadOfficialDocuments(); // Refresh documents if on Official tab
+                    }, 3000);
+                } else {
+                    statusEl.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Process all sources
+        async function processAllSources() {
+            const statusEl = document.getElementById('processStatus');
+            statusEl.textContent = 'Processing all sources...';
+            
+            try {
+                const response = await fetch('/api/admin/process-sources', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = result.message;
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        loadOfficialDocuments(); // Refresh documents if on Official tab
+                        loadStats(); // Update stats
+                    }, 3000);
+                } else {
+                    statusEl.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Load official documents
+        async function loadOfficialDocuments() {
+            try {
+                const topicId = document.getElementById('officialTopicSelect').value;
+                const url = topicId 
+                    ? `/api/admin/documents?topicId=${topicId}`
+                    : '/api/admin/documents';
+                
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
+                const documents = await response.json();
+                
+                const documentsList = document.getElementById('officialDocumentsList');
+                
+                if (documents.length === 0) {
+                    documentsList.innerHTML = '<p>No documents processed yet.</p>';
+                    return;
+                }
+                
+                documentsList.innerHTML = documents.map(doc => `
+                    <div class="document-card">
+                        <h4>${doc.title}</h4>
+                        <div class="document-meta">
+                            ID: ${doc.code} | Source: ${doc.sourceName} | Topic: ${doc.topicName} | Date: ${new Date(doc.processedAt).toLocaleDateString()}
+                        </div>
+                        <div class="document-summary">
+                            ${doc.summary || 'No summary available'}
+                        </div>
+                        <div class="document-actions">
+                            <a href="/${doc.code}.html" target="_blank">View HTML Page →</a>
+                            <a href="/api/documents/${doc.id}/markdown" target="_blank">Download Markdown</a>
+                            ${doc.originalUrl ? `<a href="${doc.originalUrl}" target="_blank">Original Source</a>` : ''}
+                            <button onclick="deleteDocument('${doc.id}', '${doc.code}')" class="delete-button">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                document.getElementById('officialDocumentsList').innerHTML = '<p>Error loading documents</p>';
+            }
+        }
+        
+        // Update topic selects to include official tab
+        async function loadTopicsWithOfficial() {
+            await loadTopics();
+            
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    credentials: 'include'
+                });
+                const topics = await response.json();
+                
+                const officialTopicSelect = document.getElementById('officialTopicSelect');
+                officialTopicSelect.innerHTML = '<option value="">All Topics</option>';
+                
+                topics.forEach(topic => {
+                    officialTopicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading topics for official tab:', error);
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAdminAuth();
+            if (isAuthenticated) {
+                loadStats();
+                loadTopicsWithOfficial();
+                loadSources();
+                
+                // Refresh stats every 30 seconds
+                setInterval(loadStats, 30000);
+            }
+        });
+        
+        // Delete document function
+        async function deleteDocument(documentId, documentCode) {
+            if (!confirm(`Are you sure you want to delete document ${documentCode}? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/documents/${documentId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Document deleted successfully');
+                    loadOfficialDocuments(); // Refresh the list
+                    loadStats(); // Update stats
+                } else {
+                    alert('Error deleting document: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting document: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

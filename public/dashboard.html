@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Franciscomoney Intel</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .header {
+            background-color: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+        
+        .alerts-grid {
+            display: grid;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+        
+        .alert-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .alert-info h3 {
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+        
+        .alert-meta {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .alert-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+        
+        .btn:hover {
+            opacity: 0.8;
+        }
+        
+        .btn-primary {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .btn-danger {
+            background-color: #e74c3c;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background-color: #95a5a6;
+            color: white;
+        }
+        
+        .add-alert {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.75rem 1.5rem;
+            background-color: #27ae60;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: #666;
+        }
+        
+        .empty-state h2 {
+            margin-bottom: 1rem;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Franciscomoney Intel Dashboard</h1>
+        <div>
+            <span id="userEmail"></span>
+            <a href="/logout" style="color: white; margin-left: 1rem;">Logout</a>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Your Alerts</h2>
+        <div id="alertsList" class="alerts-grid">
+            <!-- Alerts will be loaded here -->
+        </div>
+        <a href="/" class="add-alert">+ Create New Alert</a>
+    </div>
+    
+    <script>
+        // Check if user is logged in
+        const userEmail = localStorage.getItem('userEmail');
+        if (!userEmail) {
+            window.location.href = '/';
+        } else {
+            document.getElementById('userEmail').textContent = userEmail;
+        }
+        
+        // Load alerts
+        async function loadAlerts() {
+            const alertsList = document.getElementById('alertsList');
+            
+            try {
+                const response = await fetch('/api/alerts');
+                
+                if (response.status === 401) {
+                    window.location.href = '/';
+                    return;
+                }
+                
+                const alerts = await response.json();
+                
+                if (alerts.length === 0) {
+                    alertsList.innerHTML = `
+                        <div class="empty-state">
+                            <h2>No alerts yet</h2>
+                            <p>Create your first alert to start receiving personalized intelligence.</p>
+                        </div>
+                    `;
+                } else {
+                    alertsList.innerHTML = alerts.map(alert => `
+                        <div class="alert-card">
+                            <div class="alert-info">
+                                <h3>${alert.query}</h3>
+                                <div class="alert-meta">
+                                    <span>Frequency: ${alert.frequency}</span> | 
+                                    <span>Status: ${alert.isActive ? 'Active' : 'Paused'}</span> |
+                                    <span>Created: ${new Date(alert.createdAt).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <div class="alert-actions">
+                                <button class="btn btn-secondary" onclick="toggleAlert('${alert.id}', ${!alert.isActive})">
+                                    ${alert.isActive ? 'Pause' : 'Resume'}
+                                </button>
+                                <button class="btn btn-danger" onclick="deleteAlert('${alert.id}')">Delete</button>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                alertsList.innerHTML = '<p>Error loading alerts. Please try again.</p>';
+            }
+        }
+        
+        async function toggleAlert(id, activate) {
+            try {
+                await fetch(`/api/alerts/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ isActive: activate })
+                });
+                loadAlerts();
+            } catch (error) {
+                alert('Error updating alert');
+            }
+        }
+        
+        async function deleteAlert(id) {
+            if (confirm('Are you sure you want to delete this alert?')) {
+                try {
+                    await fetch(`/api/alerts/${id}`, {
+                        method: 'DELETE'
+                    });
+                    loadAlerts();
+                } catch (error) {
+                    alert('Error deleting alert');
+                }
+            }
+        }
+        
+        // Load alerts on page load
+        loadAlerts();
+    </script>
+</body>
+</html>

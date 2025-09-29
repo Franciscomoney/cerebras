@@ -1,0 +1,71 @@
+{
+  "name": "franciscomoney-intel",
+  "version": "1.0.0",
+  "description": "The evolution of Google Alerts - intelligent, curated, and powered by AI",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest",
+    "lint": "eslint src/",
+    "db:migrate": "node scripts/migrate.js",
+    "db:seed": "node scripts/seed.js",
+    "worker:pdf": "node src/workers/pdfProcessor.js",
+    "worker:email": "node src/workers/emailSender.js",
+    "cron:daily": "node src/workers/dailyCron.js",
+    "cron:weekly": "node src/workers/weeklyCron.js"
+  },
+  "keywords": [
+    "ai",
+    "intelligence",
+    "alerts",
+    "cerebras",
+    "llama"
+  ],
+  "author": "Francisco Cordoba Otalora",
+  "license": "MIT",
+  "dependencies": {
+    "@cerebras/cerebras_cloud_sdk": "^1.50.0",
+    "axios": "^1.12.2",
+    "bcrypt": "^5.1.1",
+    "bull": "^4.12.0",
+    "cheerio": "^1.1.2",
+    "compression": "^1.7.4",
+    "connect-redis": "^7.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "ejs": "^3.1.9",
+    "express": "^4.18.2",
+    "express-rate-limit": "^7.1.5",
+    "express-session": "^1.17.3",
+    "handlebars": "^4.7.8",
+    "helmet": "^7.1.0",
+    "html-to-text": "^9.0.5",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "marked": "^11.1.1",
+    "morgan": "^1.10.1",
+    "multer": "^1.4.5-lts.1",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "pdf-parse": "^1.1.1",
+    "pg": "^8.11.3",
+    "redis": "^4.6.12",
+    "sequelize": "^6.35.2",
+    "slugify": "^1.6.6",
+    "turndown": "^7.2.1",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "eslint": "^8.56.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.2",
+    "prettier": "^3.1.1",
+    "sequelize-cli": "^6.6.2",
+    "supertest": "^6.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

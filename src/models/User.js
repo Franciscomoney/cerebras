@@ -44,6 +44,11 @@ module.exports = (sequelize) => {
       type: DataTypes.DATE,
       allowNull: true,
     },
+    pendingAlertData: {
+      type: DataTypes.JSONB,
+      allowNull: true,
+      defaultValue: null,
+    },
     preferences: {
       type: DataTypes.JSONB,
       defaultValue: {},

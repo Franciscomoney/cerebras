@@ -195,7 +195,7 @@ router.get('/verify-email/:token', async (req, res) => {
     }
 
     // Mark email as verified
-    user.isVerified = true;
+    user.isEmailVerified = true;
     user.verificationToken = null;
     await user.save();
 

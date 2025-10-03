@@ -3,216 +3,589 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Franciscomoney Intel</title>
+    <title>My Alerts - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-        }
-        
-        .header {
-            background-color: #2c3e50;
-            color: white;
-            padding: 1rem 2rem;
+        .dashboard-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 2rem;
         }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-        
-        .alerts-grid {
+
+        .dashboard-stats {
             display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
-            margin-top: 2rem;
+            margin-bottom: 2rem;
         }
-        
-        .alert-card {
+
+        .stat-card {
             background: white;
-            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .alerts-section {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            overflow: hidden;
+        }
+
+        .section-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e5e7eb;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
-        
-        .alert-info h3 {
-            margin-bottom: 0.5rem;
-            color: #2c3e50;
+
+        .alert-list {
+            padding: 1.5rem;
         }
-        
+
+        .alert-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .alert-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+
+        .alert-name {
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .alert-keywords {
+            color: #6b7280;
+            margin: 0.5rem 0;
+        }
+
         .alert-meta {
-            color: #666;
-            font-size: 0.9rem;
+            display: flex;
+            gap: 1.5rem;
+            color: #6b7280;
+            margin-top: 1rem;
         }
-        
+
         .alert-actions {
             display: flex;
             gap: 0.5rem;
-        }
-        
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: opacity 0.2s;
-        }
-        
-        .btn:hover {
-            opacity: 0.8;
-        }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
-        .btn-secondary {
-            background-color: #95a5a6;
-            color: white;
-        }
-        
-        .add-alert {
-            display: inline-block;
             margin-top: 1rem;
-            padding: 0.75rem 1.5rem;
-            background-color: #27ae60;
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
         }
-        
+
+        .btn-small {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+            background: white;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-small:hover {
+            background: #f9fafb;
+        }
+
+        .btn-small.btn-danger {
+            color: #dc2626;
+            border-color: #fecaca;
+        }
+
+        .btn-small.btn-danger:hover {
+            background: #fee2e2;
+        }
+
+        .dialog-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dialog-content {
+            background: white;
+            border-radius: 8px;
+            width: 100%;
+            max-width: 500px;
+            padding: 2rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .dialog-header {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-control.textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+
+        .dialog-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+            margin-top: 2rem;
+        }
+
         .empty-state {
             text-align: center;
-            padding: 4rem 2rem;
-            color: #666;
+            padding: 2rem;
+            color: #6b7280;
         }
-        
-        .empty-state h2 {
-            margin-bottom: 1rem;
-            color: #333;
+
+        .empty-state h3 {
+            color: #374151;
+            margin-bottom: 0.5rem;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Franciscomoney Intel Dashboard</h1>
-        <div>
-            <span id="userEmail"></span>
-            <a href="/logout" style="color: white; margin-left: 1rem;">Logout</a>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>Franciscomoney Intel</h1>
+            <div class="nav-links">
+                <a href="/dashboard">My Alerts</a>
+                <a href="/reports">Reports</a>
+                <a href="/logout" class="text-muted text-sm">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-8">
+        <div class="dashboard-header">
+            <div>
+                <h2 class="text-xl font-semibold">My Intelligence Alerts</h2>
+                <p class="text-muted text-sm">Manage your personalized alerts and email preferences</p>
+            </div>
+            <button class="btn btn-primary" onclick="openNewAlertModal()">+ New Alert</button>
+        </div>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-label text-muted text-sm">Active Alerts</div>
+                <div class="stat-number" id="activeAlertsCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label text-muted text-sm">Reports Received</div>
+                <div class="stat-number" id="reportsCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label text-muted text-sm">Last Email</div>
+                <div class="stat-number" id="lastEmailDate">Never</div>
+            </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alerts-section">
+            <div class="section-header">
+                <h3 class="font-medium">Your Alerts</h3>
+            </div>
+            <div class="alert-list" id="alertsList">
+                <div class="empty-state">
+                    <h3>No alerts yet</h3>
+                    <p class="text-muted text-sm">Create your first alert to start receiving intelligence reports</p>
+                    <button class="btn btn-primary mt-4" onclick="openNewAlertModal()">Create Alert</button>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <div class="container">
-        <h2>Your Alerts</h2>
-        <div id="alertsList" class="alerts-grid">
-            <!-- Alerts will be loaded here -->
-        </div>
-        <a href="/" class="add-alert">+ Create New Alert</a>
-    </div>
-    
-    <script>
-        // Check if user is logged in
-        const userEmail = localStorage.getItem('userEmail');
-        if (!userEmail) {
-            window.location.href = '/';
-        } else {
-            document.getElementById('userEmail').textContent = userEmail;
-        }
-        
-        // Load alerts
-        async function loadAlerts() {
-            const alertsList = document.getElementById('alertsList');
-            
-            try {
-                const response = await fetch('/api/alerts');
+
+    <!-- New Alert Modal -->
+    <div id="newAlertModal" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <h3 class="dialog-header">Create New Alert</h3>
+            <form id="newAlertForm">
+                <div class="form-group">
+                    <label for="alertName">Alert Name</label>
+                    <input type="text" id="alertName" name="name" class="form-control" required placeholder="e.g., CBDC Developments">
+                </div>
                 
-                if (response.status === 401) {
-                    window.location.href = '/';
+                <div class="form-group">
+                    <label for="alertKeywords">Keywords</label>
+                    <textarea id="alertKeywords" name="keywords" class="form-control textarea" required placeholder="Enter keywords separated by commas&#10;e.g., CBDC, digital currency, central bank"></textarea>
+                    <div class="form-help text-muted text-sm">What topics would you like to track?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="alertFrequency">Email Frequency</label>
+                    <select id="alertFrequency" name="frequency" class="form-control" required>
+                        <option value="daily">Daily</option>
+                        <option value="weekly" selected>Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                
+                <div class="dialog-actions">
+                    <button type="button" class="btn" onclick="closeModal('newAlertModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Alert</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Alert Modal -->
+    <div id="editAlertModal" class="dialog-overlay" style="display: none;">
+        <div class="dialog-content">
+            <h3 class="dialog-header">Edit Alert</h3>
+            <form id="editAlertForm">
+                <input type="hidden" id="editAlertId">
+                
+                <div class="form-group">
+                    <label for="editAlertName">Alert Name</label>
+                    <input type="text" id="editAlertName" name="name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAlertKeywords">Keywords</label>
+                    <textarea id="editAlertKeywords" name="keywords" class="form-control textarea" required></textarea>
+                    <div class="form-help text-muted text-sm">What topics would you like to track?</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAlertFrequency">Email Frequency</label>
+                    <select id="editAlertFrequency" name="frequency" class="form-control" required>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="editAlertStatus">Status</label>
+                    <select id="editAlertStatus" name="isActive" class="form-control">
+                        <option value="true">Active</option>
+                        <option value="false">Paused</option>
+                    </select>
+                </div>
+                
+                <div class="dialog-actions">
+                    <button type="button" class="btn" onclick="closeModal('editAlertModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                
+                if (!data.isAuthenticated) {
+                    window.location.href = '/login';
                     return;
                 }
                 
-                const alerts = await response.json();
-                
-                if (alerts.length === 0) {
-                    alertsList.innerHTML = `
-                        <div class="empty-state">
-                            <h2>No alerts yet</h2>
-                            <p>Create your first alert to start receiving personalized intelligence.</p>
-                        </div>
-                    `;
-                } else {
-                    alertsList.innerHTML = alerts.map(alert => `
-                        <div class="alert-card">
-                            <div class="alert-info">
-                                <h3>${alert.query}</h3>
-                                <div class="alert-meta">
-                                    <span>Frequency: ${alert.frequency}</span> | 
-                                    <span>Status: ${alert.isActive ? 'Active' : 'Paused'}</span> |
-                                    <span>Created: ${new Date(alert.createdAt).toLocaleDateString()}</span>
-                                </div>
-                            </div>
-                            <div class="alert-actions">
-                                <button class="btn btn-secondary" onclick="toggleAlert('${alert.id}', ${!alert.isActive})">
-                                    ${alert.isActive ? 'Pause' : 'Resume'}
-                                </button>
-                                <button class="btn btn-danger" onclick="deleteAlert('${alert.id}')">Delete</button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
+                // Load dashboard data
+                loadDashboard();
             } catch (error) {
-                alertsList.innerHTML = '<p>Error loading alerts. Please try again.</p>';
+                console.error('Auth check failed:', error);
+                window.location.href = '/login';
             }
         }
-        
-        async function toggleAlert(id, activate) {
+
+        // Load dashboard data
+        async function loadDashboard() {
             try {
-                await fetch(`/api/alerts/${id}`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ isActive: activate })
-                });
-                loadAlerts();
+                const [alertsResponse, statsResponse] = await Promise.all([
+                    fetch('/api/alerts'),
+                    fetch('/api/alerts/stats')
+                ]);
+                
+                const alerts = await alertsResponse.json();
+                const stats = await statsResponse.json();
+                
+                // Update stats
+                document.getElementById('activeAlertsCount').textContent = stats.activeAlerts || 0;
+                document.getElementById('reportsCount').textContent = stats.totalReports || 0;
+                document.getElementById('lastEmailDate').textContent = stats.lastEmailDate 
+                    ? new Date(stats.lastEmailDate).toLocaleDateString()
+                    : 'Never';
+                
+                // Render alerts
+                renderAlerts(alerts);
+                
             } catch (error) {
-                alert('Error updating alert');
+                console.error('Failed to load dashboard:', error);
+                showError('Failed to load dashboard data');
             }
         }
-        
-        async function deleteAlert(id) {
-            if (confirm('Are you sure you want to delete this alert?')) {
-                try {
-                    await fetch(`/api/alerts/${id}`, {
-                        method: 'DELETE'
-                    });
-                    loadAlerts();
-                } catch (error) {
-                    alert('Error deleting alert');
-                }
+
+        // Render alerts list
+        function renderAlerts(alerts) {
+            const container = document.getElementById('alertsList');
+            
+            if (!alerts || alerts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No alerts yet</h3>
+                        <p class="text-muted text-sm">Create your first alert to start receiving intelligence reports</p>
+                        <button class="btn btn-primary mt-4" onclick="openNewAlertModal()">Create Alert</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = alerts.map(alert => `
+                <div class="alert-card">
+                    <div class="alert-header">
+                        <h4 class="alert-name">${escapeHtml(alert.name)}</h4>
+                        <span class="badge ${alert.isActive ? 'badge-success' : 'badge-warning'}">
+                            ${alert.isActive ? 'Active' : 'Paused'}
+                        </span>
+                    </div>
+                    
+                    <p class="alert-keywords text-muted text-sm">
+                        <strong>Keywords:</strong> ${escapeHtml(alert.keywords)}
+                    </p>
+                    
+                    <div class="alert-meta text-muted text-sm">
+                        <span>Frequency: ${alert.frequency}</span>
+                        <span>Created: ${new Date(alert.createdAt).toLocaleDateString()}</span>
+                        ${alert.lastSentAt ? `<span>Last sent: ${new Date(alert.lastSentAt).toLocaleDateString()}</span>` : ''}
+                    </div>
+                    
+                    <div class="alert-actions">
+                        <button class="btn btn-sm" onclick="editAlert(${alert.id})">Edit</button>
+                        <button class="btn btn-sm" onclick="toggleAlert(${alert.id}, ${!alert.isActive})">
+                            ${alert.isActive ? 'Pause' : 'Resume'}
+                        </button>
+                        <button class="btn btn-sm btn-danger" onclick="deleteAlert(${alert.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Create new alert
+        document.getElementById('newAlertForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const alertData = {
+                name: formData.get('name'),
+                keywords: formData.get('keywords'),
+                frequency: formData.get('frequency'),
+                isActive: true
+            };
+            
+            try {
+                const response = await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(alertData)
+                });
+                
+                if (!response.ok) throw new Error('Failed to create alert');
+                
+                closeModal('newAlertModal');
+                e.target.reset();
+                loadDashboard();
+                showSuccess('Alert created successfully!');
+                
+            } catch (error) {
+                console.error('Failed to create alert:', error);
+                showError('Failed to create alert');
+            }
+        });
+
+        // Edit alert
+        async function editAlert(alertId) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}`);
+                const alert = await response.json();
+                
+                document.getElementById('editAlertId').value = alert.id;
+                document.getElementById('editAlertName').value = alert.name;
+                document.getElementById('editAlertKeywords').value = alert.keywords;
+                document.getElementById('editAlertFrequency').value = alert.frequency;
+                document.getElementById('editAlertStatus').value = alert.isActive;
+                
+                document.getElementById('editAlertModal').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Failed to load alert:', error);
+                showError('Failed to load alert');
             }
         }
-        
-        // Load alerts on page load
-        loadAlerts();
+
+        // Update alert
+        document.getElementById('editAlertForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const alertId = document.getElementById('editAlertId').value;
+            const formData = new FormData(e.target);
+            const alertData = {
+                name: formData.get('name'),
+                keywords: formData.get('keywords'),
+                frequency: formData.get('frequency'),
+                isActive: formData.get('isActive') === 'true'
+            };
+            
+            try {
+                const response = await fetch(`/api/alerts/${alertId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(alertData)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update alert');
+                
+                closeModal('editAlertModal');
+                loadDashboard();
+                showSuccess('Alert updated successfully!');
+                
+            } catch (error) {
+                console.error('Failed to update alert:', error);
+                showError('Failed to update alert');
+            }
+        });
+
+        // Toggle alert status
+        async function toggleAlert(alertId, isActive) {
+            try {
+                const response = await fetch(`/api/alerts/${alertId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ isActive })
+                });
+                
+                if (!response.ok) throw new Error('Failed to update alert');
+                
+                loadDashboard();
+                showSuccess(isActive ? 'Alert resumed!' : 'Alert paused!');
+                
+            } catch (error) {
+                console.error('Failed to toggle alert:', error);
+                showError('Failed to update alert');
+            }
+        }
+
+        // Delete alert
+        async function deleteAlert(alertId) {
+            if (!confirm('Are you sure you want to delete this alert?')) return;
+            
+            try {
+                const response = await fetch(`/api/alerts/${alertId}`, {
+                    method: 'DELETE'
+                });
+                
+                if (!response.ok) throw new Error('Failed to delete alert');
+                
+                loadDashboard();
+                showSuccess('Alert deleted successfully!');
+                
+            } catch (error) {
+                console.error('Failed to delete alert:', error);
+                showError('Failed to delete alert');
+            }
+        }
+
+        // Modal functions
+        function openNewAlertModal() {
+            document.getElementById('newAlertModal').style.display = 'flex';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('dialog-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        function showSuccess(message) {
+            // You can implement a toast notification here
+            alert(message);
+        }
+
+        function showError(message) {
+            // You can implement a toast notification here
+            alert('Error: ' + message);
+        }
+
+        // Initialize
+        checkAuth();
     </script>
 </body>
 </html>

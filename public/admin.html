@@ -4,53 +4,59 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background-color: #f5f5f5;
+            background-color: hsl(var(--muted) / 0.4);
         }
         
-        .header {
-            background-color: #c0392b;
-            color: white;
-            padding: 1rem 2rem;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 2rem auto;
-            padding: 0 2rem;
-        }
-        
-        .tabs {
-            display: flex;
-            gap: 1rem;
+        /* Admin Header */
+        .admin-header {
+            background: hsl(var(--foreground));
+            color: hsl(var(--background));
+            padding: 1rem 0;
             margin-bottom: 2rem;
-            border-bottom: 2px solid #ddd;
+        }
+        
+        .admin-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: hsl(var(--background));
+        }
+        
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+            overflow-x: auto;
         }
         
         .tab {
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             background: none;
             border: none;
             cursor: pointer;
-            font-size: 1rem;
-            color: #666;
-            border-bottom: 3px solid transparent;
-            margin-bottom: -2px;
+            font-size: 0.875rem;
+            color: hsl(var(--muted-foreground));
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            color: hsl(var(--foreground));
         }
         
         .tab.active {
-            color: #333;
-            border-bottom-color: #c0392b;
+            color: hsl(var(--foreground));
+            border-bottom-color: hsl(var(--foreground));
         }
         
+        /* Tab Content */
         .tab-content {
             display: none;
         }
@@ -59,62 +65,7 @@
             display: block;
         }
         
-        .section {
-            background: white;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 2rem;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
-        }
-        
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1rem;
-        }
-        
-        .btn {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: opacity 0.2s;
-        }
-        
-        .btn:hover {
-            opacity: 0.8;
-        }
-        
-        .btn-primary {
-            background-color: #3498db;
-            color: white;
-        }
-        
-        .btn-success {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .btn-danger {
-            background-color: #e74c3c;
-            color: white;
-        }
-        
+        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -123,65 +74,61 @@
         }
         
         .stat-card {
-            background: #ecf0f1;
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
             padding: 1.5rem;
-            border-radius: 4px;
             text-align: center;
         }
         
         .stat-card h3 {
             font-size: 2rem;
-            color: #2c3e50;
+            font-weight: 600;
             margin-bottom: 0.5rem;
         }
         
-        .source-list {
-            list-style: none;
+        .stat-card p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
         }
         
+        /* Custom styles for admin forms */
         .source-item {
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 0.5rem;
+            background: hsl(var(--muted) / 0.5);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.75rem;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: start;
+            gap: 1rem;
         }
         
-        .api-status {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.9rem;
+        .source-item strong {
+            color: hsl(var(--foreground));
         }
         
-        .api-status.active {
-            background-color: #27ae60;
-            color: white;
-        }
-        
-        .api-status.inactive {
-            background-color: #e74c3c;
-            color: white;
+        .source-item small {
+            color: hsl(var(--muted-foreground));
         }
         
         .document-card {
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            border-radius: 8px;
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
             padding: 1.5rem;
             margin-bottom: 1rem;
         }
         
         .document-card h4 {
-            color: #2c3e50;
+            font-size: 1.125rem;
+            font-weight: 600;
             margin-bottom: 0.5rem;
         }
         
         .document-meta {
-            color: #6c757d;
-            font-size: 0.9rem;
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
             margin-bottom: 1rem;
         }
         
@@ -193,42 +140,43 @@
         .document-actions {
             display: flex;
             gap: 1rem;
+            flex-wrap: wrap;
         }
         
         .document-actions a {
-            color: #3498db;
+            color: hsl(var(--primary));
             text-decoration: none;
+            font-size: 0.875rem;
             font-weight: 500;
         }
         
         .document-actions a:hover {
             text-decoration: underline;
         }
-        
-        .delete-button {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-        
-        .delete-button:hover {
-            background-color: #c82333;
-        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Admin Dashboard - Franciscomoney Intel</h1>
+    <div class="admin-header">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Admin Dashboard - Franciscomoney Intel</h1>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span style="color: hsl(var(--background)); opacity: 0.8; font-size: 0.875rem;">Admin Login:</span>
+                    <code style="background: hsl(var(--background) / 0.2); padding: 0.25rem 0.5rem; border-radius: var(--radius); font-size: 0.875rem;">
+                        f@pachoman.com / C@rlos2025
+                    </code>
+                    <a href="/logout" style="background: hsl(var(--background)); color: hsl(var(--foreground)); padding: 0.5rem 1rem; border-radius: var(--radius); text-decoration: none; font-size: 0.875rem; font-weight: 500; border: 1px solid hsl(var(--background) / 0.2);">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="container">
-        <div class="tabs">
+        <div class="tab-nav">
             <button class="tab active" onclick="showTab('overview')">Overview</button>
+            <button class="tab" onclick="showTab('users')">Users</button>
             <button class="tab" onclick="showTab('topics')">Topic Areas</button>
             <button class="tab" onclick="showTab('sources')">Sources</button>
             <button class="tab" onclick="showTab('sponsors')">Sponsors</button>
@@ -259,52 +207,93 @@
             </div>
         </div>
         
+        <!-- Users Tab -->
+        <div id="users" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Users Management</h3>
+                    <p class="card-description">View and manage all registered users and their interests</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Alerts</th>
+                                <th>Interest Areas</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
         <!-- Topic Areas Tab -->
         <div id="topics" class="tab-content">
-            <div class="section">
-                <h2>Topic Areas</h2>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Topic Areas</h3>
+                    <p class="card-description">Define topic categories for organizing content</p>
+                </div>
+                
                 <form id="topicForm">
                     <div class="form-group">
                         <label>Topic Name</label>
-                        <input type="text" name="name" placeholder="e.g., CBDCs" required>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., CBDCs" required>
                     </div>
                     <div class="form-group">
                         <label>Description</label>
-                        <textarea name="description" rows="3"></textarea>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
                     </div>
                     <div class="form-group">
-                        <label>Keywords (comma-separated)</label>
-                        <input type="text" name="keywords" placeholder="central bank, digital currency, CBDC">
+                        <label>Keywords <span class="text-muted text-xs">(comma-separated)</span></label>
+                        <input type="text" name="keywords" class="form-control" placeholder="central bank, digital currency, CBDC">
                     </div>
                     <button type="submit" class="btn btn-primary">Add Topic Area</button>
                 </form>
-                <hr style="margin: 2rem 0;">
-                <div id="topicsList"></div>
+                
+                <div class="mt-6">
+                    <h4 class="mb-4">Existing Topics</h4>
+                    <div id="topicsList"></div>
+                </div>
             </div>
         </div>
         
         <!-- Sources Tab -->
         <div id="sources" class="tab-content">
-            <div class="section">
-                <h2>Manage Sources</h2>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Manage Sources</h3>
+                    <p class="card-description">Configure data sources for automatic document collection</p>
+                </div>
+                
                 <form id="sourceForm">
                     <div class="form-group">
                         <label>Topic Area</label>
-                        <select name="topicAreaId" required>
+                        <select name="topicAreaId" class="form-control" required>
                             <option value="">Select topic area...</option>
                         </select>
                     </div>
                     <div class="form-group">
                         <label>Source Name</label>
-                        <input type="text" name="name" placeholder="e.g., BIS Reports" required>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., BIS Reports" required>
                     </div>
                     <div class="form-group">
                         <label>URL</label>
-                        <input type="url" name="url" placeholder="https://www.bis.org/publications/" required>
+                        <input type="url" name="url" class="form-control" placeholder="https://www.bis.org/publications/" required>
                     </div>
                     <div class="form-group">
                         <label>Type</label>
-                        <select name="type">
+                        <select name="type" class="form-control">
                             <option value="pdf">PDF</option>
                             <option value="rss">RSS Feed</option>
                             <option value="webpage">Web Page</option>
@@ -313,38 +302,45 @@
                     </div>
                     <button type="submit" class="btn btn-primary">Add Source</button>
                 </form>
-                <hr style="margin: 2rem 0;">
-                <div style="margin-bottom: 1rem;">
-                    <button class="btn btn-success" onclick="processAllSources()">Process All Sources Now</button>
-                    <span id="processStatus" style="margin-left: 1rem; font-style: italic;"></span>
+                
+                <div class="mt-6">
+                    <div class="mb-4">
+                        <button class="btn btn-success" onclick="processAllSources()">Process All Sources Now</button>
+                        <span id="processStatus" class="text-muted text-sm ml-4"></span>
+                    </div>
+                    <h4 class="mb-4">Active Sources</h4>
+                    <div id="sourcesList"></div>
                 </div>
-                <div id="sourcesList"></div>
             </div>
         </div>
         
         <!-- Sponsors Tab -->
         <div id="sponsors" class="tab-content">
-            <div class="section">
-                <h2>Sponsored Content</h2>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sponsored Content</h3>
+                    <p class="card-description">Manage sponsored content for email campaigns</p>
+                </div>
+                
                 <form id="sponsorForm">
                     <div class="form-group">
                         <label>Title</label>
-                        <input type="text" name="title" required>
+                        <input type="text" name="title" class="form-control" required>
                     </div>
                     <div class="form-group">
                         <label>Content</label>
-                        <textarea name="content" rows="4" required></textarea>
+                        <textarea name="content" class="form-control" rows="4" required></textarea>
                     </div>
                     <div class="form-group">
                         <label>Link</label>
-                        <input type="url" name="link" placeholder="https://sponsor-website.com">
+                        <input type="url" name="link" class="form-control" placeholder="https://sponsor-website.com">
                     </div>
                     <div class="form-group">
                         <label>Target Topic Areas</label>
-                        <select name="topicAreas" multiple style="height: 100px;">
+                        <select name="topicAreas" multiple class="form-control" style="height: 100px;">
                             <!-- Options loaded dynamically -->
                         </select>
-                        <small>Hold Ctrl/Cmd to select multiple</small>
+                        <small class="text-muted text-xs">Hold Ctrl/Cmd to select multiple</small>
                     </div>
                     <button type="submit" class="btn btn-primary">Add Sponsor</button>
                 </form>
@@ -353,45 +349,60 @@
         
         <!-- API Config Tab -->
         <div id="api" class="tab-content">
-            <div class="section">
-                <h2>API Configuration</h2>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">API Configuration</h3>
+                    <p class="card-description">Configure external API integrations</p>
+                </div>
+                
                 <form id="apiForm">
                     <div class="form-group">
                         <label>Cerebras API Key</label>
-                        <input type="password" name="cerebras_api_key" placeholder="Enter your Cerebras API key">
-                        <small>This will update the server's .env file</small>
+                        <input type="password" name="cerebras_api_key" class="form-control" placeholder="Enter your Cerebras API key">
+                        <small class="text-muted text-xs">This will update the server's .env file</small>
                     </div>
                     <button type="submit" class="btn btn-success">Update API Key</button>
-                    <button type="button" class="btn btn-primary" onclick="testApiConnection()">Test Connection</button>
+                    <button type="button" class="btn btn-ghost ml-2" onclick="testApiConnection()">Test Connection</button>
                 </form>
-                <div style="margin-top: 1rem;">
-                    <span class="api-status" id="apiStatus">Status Unknown</span>
+                
+                <div class="mt-4">
+                    <span class="badge" id="apiStatus">Status Unknown</span>
                 </div>
             </div>
         </div>
         
         <!-- Official Tab -->
         <div id="official" class="tab-content">
-            <div class="section">
-                <h2>Official Documents</h2>
-                <p>View HTML pages of processed documents with summaries and download links.</p>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Official Documents</h3>
+                    <p class="card-description">View and manage processed documents</p>
+                </div>
+                
                 <div class="form-group">
-                    <label>Select Topic Area</label>
-                    <select id="officialTopicSelect" onchange="loadOfficialDocuments()">
+                    <label>Filter by Topic</label>
+                    <select id="officialTopicSelect" class="form-control" onchange="loadOfficialDocuments()">
                         <option value="">All Topics</option>
                     </select>
                 </div>
-                <div id="officialDocumentsList" style="margin-top: 2rem;">
-                    <!-- Documents will be loaded here -->
+                
+                <div id="officialDocumentsList" class="mt-6">
+                    <p class="text-muted text-center">Loading documents...</p>
                 </div>
             </div>
         </div>
         
         <!-- Analytics Tab -->
         <div id="analytics" class="tab-content">
-            <div class="section">
-                <h2>Analytics</h2>
-                <p>Email open rates, click-through rates, and engagement metrics will appear here.</p>
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Analytics</h3>
+                    <p class="card-description">Email open rates, click-through rates, and engagement metrics</p>
+                </div>
+                
+                <div class="text-center py-8 text-muted">
+                    <p>Analytics data will appear here</p>
+                </div>
             </div>
         </div>
     </div>
@@ -461,14 +472,25 @@
         async function testApiConnection() {
             const statusEl = document.getElementById('apiStatus');
             statusEl.textContent = 'Testing...';
-            statusEl.className = 'api-status';
+            statusEl.className = 'badge badge-warning';
             
-            // Simulate API test
-            setTimeout(() => {
-                // This would actually test the Cerebras API
-                statusEl.textContent = 'API Active';
-                statusEl.classList.add('active');
-            }, 1000);
+            try {
+                const response = await fetch('/api/admin/api-test', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'active') {
+                    statusEl.textContent = 'API Active';
+                    statusEl.className = 'badge badge-success';
+                } else {
+                    statusEl.textContent = 'API Inactive';
+                    statusEl.className = 'badge badge-error';
+                }
+            } catch (error) {
+                statusEl.textContent = 'Test Failed';
+                statusEl.className = 'badge badge-error';
+            }
         }
         
         // Load statistics
@@ -513,10 +535,11 @@
                 topicsList.innerHTML = topics.map(topic => `
                     <div class="source-item">
                         <div>
-                            <strong>${topic.name}</strong> - ${topic.description || 'No description'}
-                            <br><small>Keywords: ${topic.keywords ? topic.keywords.join(', ') : 'None'}</small>
+                            <strong>${topic.name}</strong>
+                            <br><small>${topic.description || 'No description'}</small>
+                            <br><small class="text-xs">Keywords: ${topic.keywords ? topic.keywords.join(', ') : 'None'}</small>
                         </div>
-                        <button class="btn btn-danger" onclick="deleteTopic('${topic.id}')">Delete</button>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTopic('${topic.id}')">Delete</button>
                     </div>
                 `).join('');
             } catch (error) {
@@ -536,15 +559,55 @@
                 sourcesList.innerHTML = sources.map(source => `
                     <div class="source-item">
                         <div>
-                            <strong>${source.name}</strong> - ${source.url}
+                            <strong>${source.name}</strong> - <span class="text-muted">${source.url}</span>
                             <br><small>Type: ${source.type} | Topic: ${source.topicArea ? source.topicArea.name : 'None'}</small>
                         </div>
-                        <button class="btn btn-primary" onclick="processSource('${source.id}')">Process Now</button>
-                        <button class="btn btn-danger" onclick="deleteSource('${source.id}')">Delete</button>
+                        <div class="flex gap-2">
+                            <button class="btn btn-sm" onclick="processSource('${source.id}')">Process</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSource('${source.id}')">Delete</button>
+                        </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Error loading sources:', error);
+            }
+        }
+        
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    credentials: 'include'
+                });
+                const users = await response.json();
+                
+                const usersTableBody = document.getElementById('usersTableBody');
+                
+                if (users.length === 0) {
+                    usersTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No users found</td></tr>';
+                    return;
+                }
+                
+                usersTableBody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.name || '<span class="text-muted">N/A</span>'}</td>
+                        <td>${user.alertsCount || 0}</td>
+                        <td>
+                            ${user.interestAreas && user.interestAreas.length > 0 
+                                ? user.interestAreas.map(k => `<span class="badge">${k}</span>`).join(' ')
+                                : '<span class="text-muted">None</span>'
+                            }
+                        </td>
+                        <td><span class="badge ${user.isActive ? 'badge-success' : 'badge-warning'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted">Error loading users</td></tr>';
             }
         }
         
@@ -680,6 +743,28 @@
             }
         }
         
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    alert('User deleted successfully');
+                    loadUsers();
+                    loadStats(); // Update stats
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting user: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error deleting user: ' + error.message);
+            }
+        }
+        
         // Process single source
         async function processSource(id) {
             const statusEl = document.getElementById('processStatus');
@@ -751,7 +836,7 @@
                 const documentsList = document.getElementById('officialDocumentsList');
                 
                 if (documents.length === 0) {
-                    documentsList.innerHTML = '<p>No documents processed yet.</p>';
+                    documentsList.innerHTML = '<p class="text-muted text-center">No documents processed yet.</p>';
                     return;
                 }
                 
@@ -768,13 +853,13 @@
                             <a href="/${doc.code}.html" target="_blank">View HTML Page →</a>
                             <a href="/api/documents/${doc.id}/markdown" target="_blank">Download Markdown</a>
                             ${doc.originalUrl ? `<a href="${doc.originalUrl}" target="_blank">Original Source</a>` : ''}
-                            <button onclick="deleteDocument('${doc.id}', '${doc.code}')" class="delete-button">Delete</button>
+                            <button onclick="deleteDocument('${doc.id}', '${doc.code}')" class="btn btn-danger btn-sm">Delete</button>
                         </div>
                     </div>
                 `).join('');
             } catch (error) {
                 console.error('Error loading documents:', error);
-                document.getElementById('officialDocumentsList').innerHTML = '<p>Error loading documents</p>';
+                document.getElementById('officialDocumentsList').innerHTML = '<p class="text-muted text-center">Error loading documents</p>';
             }
         }
         
@@ -798,19 +883,6 @@
                 console.error('Error loading topics for official tab:', error);
             }
         }
-        
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', async () => {
-            const isAuthenticated = await checkAdminAuth();
-            if (isAuthenticated) {
-                loadStats();
-                loadTopicsWithOfficial();
-                loadSources();
-                
-                // Refresh stats every 30 seconds
-                setInterval(loadStats, 30000);
-            }
-        });
         
         // Delete document function
         async function deleteDocument(documentId, documentCode) {
@@ -837,6 +909,20 @@
                 alert('Error deleting document: ' + error.message);
             }
         }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAdminAuth();
+            if (isAuthenticated) {
+                loadStats();
+                loadTopicsWithOfficial();
+                loadSources();
+                loadUsers();
+                
+                // Refresh stats every 30 seconds
+                setInterval(loadStats, 30000);
+            }
+        });
     </script>
 </body>
 </html>

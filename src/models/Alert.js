@@ -15,6 +15,14 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    keywords: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
     query: {
       type: DataTypes.TEXT,
       allowNull: false,

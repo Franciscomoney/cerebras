@@ -263,9 +263,37 @@ router.get('/users', async (req, res) => {
   try {
     const users = await User.findAll({
       attributes: { exclude: ['password'] },
-      include: [{ model: Alert, as: 'alerts' }]
+      include: [{ 
+        model: Alert, 
+        as: 'alerts',
+        attributes: ['id', 'name', 'keywords', 'isActive']
+      }]
     });
-    res.json(users);
+    
+    // Format users with their interest areas
+    const formattedUsers = users.map(user => {
+      const userObj = user.toJSON();
+      
+      // Collect all unique keywords from user's alerts
+      const allKeywords = userObj.alerts
+        .filter(alert => alert.isActive)
+        .map(alert => alert.keywords.split(',').map(k => k.trim()))
+        .flat();
+      
+      // Remove duplicates
+      const uniqueKeywords = [...new Set(allKeywords)];
+      
+      return {
+        id: userObj.id,
+        email: userObj.email,
+        name: userObj.name,
+        isActive: userObj.isVerified,
+        alertsCount: userObj.alerts.length,
+        interestAreas: uniqueKeywords
+      };
+    });
+    
+    res.json(formattedUsers);
   } catch (error) {
     logger.error('Error fetching users:', error);
     res.status(500).json({ error: 'Failed to fetch users' });

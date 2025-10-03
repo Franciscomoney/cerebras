@@ -71,6 +71,10 @@ app.use('/api/alerts', alertsRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/admin', adminRouter);
 
+// Tracking routes (must be imported after models are initialized)
+const trackingRouter = require('./api/tracking');
+app.use('/api/tracking', trackingRouter);
+
 // Landing page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'index.html'));
@@ -84,6 +88,21 @@ app.get('/login', (req, res) => {
 // User dashboard
 app.get('/dashboard', (req, res) => {
   res.sendFile(path.join(__dirname, '..', 'public', 'dashboard.html'));
+});
+
+// Reports page
+app.get('/reports', (req, res) => {
+  res.sendFile(path.join(__dirname, '..', 'public', 'reports.html'));
+});
+
+// Logout redirect
+app.get('/logout', async (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      logger.error('Error destroying session:', err);
+    }
+    res.redirect('/login');
+  });
 });
 
 // Admin dashboard

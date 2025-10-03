@@ -283,6 +283,65 @@ class CerebrasService {
       return [];
     }
   }
+
+  async personalizeDocument(content, userKeywords, existingAnalysis) {
+    if (!content || !userKeywords) {
+      throw new Error('Content and user keywords are required');
+    }
+
+    const prompt = `
+      Based on the user's specific interests (${userKeywords}), create a personalized analysis of this document.
+      
+      Existing document analysis:
+      ${JSON.stringify(existingAnalysis, null, 2)}
+      
+      Document content excerpt:
+      ${content.substring(0, 3000)}...
+      
+      Create a personalized summary that:
+      1. Focuses on aspects most relevant to the user's keywords: ${userKeywords}
+      2. Highlights why this document matters for their specific interests
+      3. Extracts facts specifically related to their topics
+      
+      Return only valid JSON in this exact format:
+      {
+        "personalizedSummary": "A 2-3 sentence summary tailored to their interests",
+        "relevantFacts": ["fact 1 related to their keywords", "fact 2", "fact 3"],
+        "relevanceScore": 85
+      }
+    `;
+
+    try {
+      const response = await this._makeRequest({
+        model: this.model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a personalization expert. Create summaries tailored to user interests. Return only valid JSON."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        temperature: 0.4,
+        max_tokens: 800
+      });
+
+      const result = JSON.parse(response);
+      
+      // Merge with existing analysis
+      return {
+        summary: result.personalizedSummary || existingAnalysis.summary,
+        facts: result.relevantFacts || existingAnalysis.facts,
+        relevanceScore: result.relevanceScore || existingAnalysis.relevanceScore
+      };
+      
+    } catch (error) {
+      logger.error('Document personalization failed', { error: error.message });
+      return existingAnalysis; // Fallback to original analysis
+    }
+  }
 }
 
 module.exports = CerebrasService;

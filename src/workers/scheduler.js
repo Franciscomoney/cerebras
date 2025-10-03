@@ -1,48 +1,90 @@
 const cron = require('node-cron');
-const logger = require('./utils/logger');
-const AlertProcessor = require('./workers/alertProcessor');
-const { sequelize } = require('./models');
+const logger = require('../utils/logger');
+const AlertProcessor = require('./alertProcessor');
+const SourceProcessor = require('./sourceProcessor');
+const { sequelize } = require('../models');
 
-class AlertScheduler {
+class Scheduler {
   constructor() {
-    this.alertProcessor = new AlertProcessor(sequelize);
-    this.task = null;
-    this.isRunning = false;
+    this.alertProcessor = new AlertProcessor();
+    this.sourceProcessor = new SourceProcessor();
+    this.tasks = [];
+    this.isProcessingAlerts = false;
+    this.isProcessingSources = false;
   }
 
   start() {
-    logger.info('Starting Alert Scheduler');
+    logger.info('Starting Scheduler Service');
     
-    // Schedule the task to run every 30 minutes
-    this.task = cron.schedule('*/30 * * * *', async () => {
-      if (this.isRunning) {
-        logger.info('Alert processing cycle already running, skipping');
+    // Schedule source processing - daily at 2 AM
+    const sourceTask = cron.schedule(process.env.PDF_FETCH_SCHEDULE || '0 2 * * *', async () => {
+      if (this.isProcessingSources) {
+        logger.info('Source processing already running, skipping');
         return;
       }
       
-      this.isRunning = true;
-      logger.info('Alert processing cycle started');
+      this.isProcessingSources = true;
+      logger.info('Source processing started');
+      
+      try {
+        await this.sourceProcessor.processAllSources();
+      } catch (error) {
+        logger.error('Error in source processing', { error: error.message });
+      } finally {
+        this.isProcessingSources = false;
+        logger.info('Source processing completed');
+      }
+    });
+    this.tasks.push(sourceTask);
+    
+    // Schedule alert processing - weekly on Sunday at 9 AM
+    const alertTask = cron.schedule(process.env.EMAIL_SEND_SCHEDULE || '0 9 * * 0', async () => {
+      if (this.isProcessingAlerts) {
+        logger.info('Alert processing already running, skipping');
+        return;
+      }
+      
+      this.isProcessingAlerts = true;
+      logger.info('Alert processing started');
       
       try {
         await this.alertProcessor.processAlerts();
       } catch (error) {
-        logger.error('Error in alert processing cycle', { error: error.message });
+        logger.error('Error in alert processing', { error: error.message });
       } finally {
-        this.isRunning = false;
-        logger.info('Alert processing cycle completed');
+        this.isProcessingAlerts = false;
+        logger.info('Alert processing completed');
       }
     });
+    this.tasks.push(alertTask);
+    
+    // Also run alert processing every 4 hours for testing
+    const frequentAlertTask = cron.schedule('0 */4 * * *', async () => {
+      logger.info('Running frequent alert check');
+      try {
+        await this.alertProcessor.runScheduledJob();
+      } catch (error) {
+        logger.error('Error in frequent alert check', { error: error.message });
+      }
+    });
+    this.tasks.push(frequentAlertTask);
 
+    logger.info('Scheduler started with following schedules:');
+    logger.info('- Source processing:', process.env.PDF_FETCH_SCHEDULE || '0 2 * * * (Daily at 2 AM)');
+    logger.info('- Alert processing:', process.env.EMAIL_SEND_SCHEDULE || '0 9 * * 0 (Sunday at 9 AM)');
+    logger.info('- Frequent alert check: Every 4 hours');
+    
     // Handle graceful shutdown
     process.on('SIGINT', () => this.stop());
     process.on('SIGTERM', () => this.stop());
   }
 
   stop() {
-    logger.info('Stopping Alert Scheduler');
-    if (this.task) {
-      this.task.stop();
-    }
+    logger.info('Stopping Scheduler Service');
+    
+    // Stop all cron tasks
+    this.tasks.forEach(task => task.stop());
+    
     sequelize.close()
       .then(() => {
         logger.info('Database connection closed');
@@ -55,5 +97,10 @@ class AlertScheduler {
   }
 }
 
-const scheduler = new AlertScheduler();
-scheduler.start();
+// Only start the scheduler if this file is run directly
+if (require.main === module) {
+  const scheduler = new Scheduler();
+  scheduler.start();
+}
+
+module.exports = Scheduler;

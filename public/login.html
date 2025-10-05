@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: hsl(var(--muted) / 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .auth-container {
+            background: hsl(var(--card));
+            padding: 2rem;
+            border-radius: calc(var(--radius) * 1.5);
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-subtitle {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .links a {
+            color: hsl(var(--muted-foreground));
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        
+        .links a:hover {
+            color: hsl(var(--foreground));
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1 class="auth-title">Welcome back</h1>
+            <p class="auth-subtitle">Sign in to your account to continue</p>
+        </div>
+        
+        <div id="verifiedMessage" class="alert alert-success" style="display: none;">
+            ✅ Your email has been verified! You can now login.
+        </div>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control"
+                    required
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-control"
+                    required
+                    autocomplete="current-password"
+                    placeholder="••••••••"
+                >
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </form>
+        
+        <div id="message" style="display: none; margin-top: 1rem;"></div>
+        
+        <div class="links">
+            <a href="/register">Don't have an account? Sign up</a>
+            <br>
+            <a href="/">← Back to home</a>
+        </div>
+        
+        <div style="margin-top: 2rem; padding: 1rem; background: hsl(var(--muted) / 0.5); border-radius: var(--radius); border: 1px solid hsl(var(--border));">
+            <p style="font-size: 0.75rem; color: hsl(var(--muted-foreground)); margin: 0; text-align: center;">
+                <strong>Test Credentials:</strong><br>
+                Admin: f@pachoman.com / C@rlos2025<br>
+                Seller: seller@test.com / C@rlos2025<br>
+                Buyer: buyer@test.com / C@rlos2025
+            </p>
+        </div>
+    </div>
+    
+    <script>
+        // Check for verification success
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('verified') === 'true') {
+            document.getElementById('verifiedMessage').style.display = 'block';
+        }
+        
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const formData = new FormData(e.target);
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Signing in...';
+            message.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: formData.get('email'),
+                        password: formData.get('password')
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    message.className = 'alert alert-success';
+                    message.textContent = 'Login successful! Redirecting...';
+                    message.style.display = 'block';
+                    
+                    // Store user info
+                    localStorage.setItem('userEmail', data.user.email);
+                    localStorage.setItem('isAdmin', data.user.isAdmin);
+                    
+                    // Redirect based on admin status
+                    setTimeout(() => {
+                        window.location.href = data.user.isAdmin ? '/admin' : '/dashboard';
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || 'Login failed');
+                }
+            } catch (error) {
+                message.className = 'alert alert-error';
+                message.textContent = error.message;
+                message.style.display = 'block';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign In';
+            }
+        });
+    </script>
+</body>
+</html>

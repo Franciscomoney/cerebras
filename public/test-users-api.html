@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Users API</title>
+    <style>
+        body { font-family: monospace; padding: 20px; }
+        .success { color: green; }
+        .error { color: red; }
+        pre { background: #f5f5f5; padding: 15px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Users API Test</h1>
+    <div id="status"></div>
+    <h2>Response:</h2>
+    <pre id="response"></pre>
+    
+    <script>
+        async function testAPI() {
+            const status = document.getElementById('status');
+            const response = document.getElementById('response');
+            
+            try {
+                // First login
+                status.innerHTML = '⏳ Logging in...';
+                const loginRes = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: 'admin@franciscomoney.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (!loginRes.ok) {
+                    throw new Error('Login failed');
+                }
+                
+                status.innerHTML = '✅ Logged in<br>⏳ Fetching users...';
+                
+                // Fetch users
+                const usersRes = await fetch('/api/admin/users', {
+                    credentials: 'include'
+                });
+                
+                const users = await usersRes.json();
+                
+                status.innerHTML = '✅ Logged in<br>✅ Fetched ' + users.length + ' users';
+                
+                // Check for new fields
+                if (users.length > 0) {
+                    const firstUser = users[0];
+                    const hasNewFields = 
+                        firstUser.hasOwnProperty('emailSent') &&
+                        firstUser.hasOwnProperty('isEmailVerified') &&
+                        firstUser.hasOwnProperty('passwordSet') &&
+                        firstUser.hasOwnProperty('alertCount');
+                    
+                    if (hasNewFields) {
+                        status.innerHTML += '<br><span class="success">✅ ALL NEW FIELDS PRESENT!</span>';
+                    } else {
+                        status.innerHTML += '<br><span class="error">❌ Some fields missing</span>';
+                    }
+                }
+                
+                response.textContent = JSON.stringify(users, null, 2);
+                
+            } catch (error) {
+                status.innerHTML = '<span class="error">❌ Error: ' + error.message + '</span>';
+                response.textContent = error.stack;
+            }
+        }
+        
+        // Run on page load
+        testAPI();
+    </script>
+</body>
+</html>

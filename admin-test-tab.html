@@ -1,0 +1,386 @@
+<!-- Add this to admin.html tabs navigation (around line 54) -->
+<button class="tab" onclick="showTab('test')">Test Discovery</button>
+
+<!-- Add this tab content section (around line 350, after analytics tab) -->
+
+<!-- Test Tab -->
+<div id="test" class="tab-content">
+    <div class="card">
+        <div class="card-header">
+            <h3 class="card-title">🧪 Test End-to-End Discovery & Email</h3>
+            <p class="card-description">Test the complete flow: search → discover PDFs → process → generate summary → send email</p>
+        </div>
+
+        <form id="testDiscoveryForm">
+            <div class="form-group">
+                <label>Search Topic/Keywords</label>
+                <input type="text" name="searchTerm" class="form-control" placeholder="e.g., Central Bank Digital Currencies" required>
+                <small class="text-muted text-xs">What topic should we search for?</small>
+            </div>
+
+            <div class="form-group">
+                <label>Test Email Address</label>
+                <input type="email" name="testEmail" class="form-control" placeholder="your@email.com" required>
+                <small class="text-muted text-xs">Where should we send the test alert?</small>
+            </div>
+
+            <div class="form-group">
+                <label>Number of PDFs to Include</label>
+                <input type="number" name="maxResults" class="form-control" value="5" min="1" max="10">
+                <small class="text-muted text-xs">How many PDFs to discover and include in email (1-10)</small>
+            </div>
+
+            <div class="form-group">
+                <label>Search Period</label>
+                <select name="daysBack" class="form-control">
+                    <option value="7">Last 7 days</option>
+                    <option value="15" selected>Last 15 days</option>
+                    <option value="30">Last 30 days</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg">
+                🚀 Run Full Test (Discovery + Email)
+            </button>
+        </form>
+
+        <!-- Progress Display -->
+        <div id="testProgress" style="display: none; margin-top: 2rem; padding: 1.5rem; background: hsl(var(--muted) / 0.3); border-radius: var(--radius);">
+            <h4 style="font-size: 1rem; margin-bottom: 1rem;">Test Progress:</h4>
+            <div id="testSteps"></div>
+        </div>
+
+        <!-- Results Display -->
+        <div id="testResults" style="display: none; margin-top: 2rem;">
+            <h4 style="font-size: 1.125rem; margin-bottom: 1rem;">Test Results:</h4>
+
+            <!-- Discovery Results -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📊 Discovery Results</h5>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.875rem;">
+                        <div>
+                            <strong id="testResultsFound">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">Total Results</div>
+                        </div>
+                        <div>
+                            <strong id="testPdfsFound">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">PDFs Found</div>
+                        </div>
+                        <div>
+                            <strong id="testCost">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">Cost</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <strong style="font-size: 0.875rem;">Search Query Used:</strong>
+                        <div id="testSearchQuery" style="padding: 0.5rem; background: hsl(var(--muted) / 0.5); border-radius: var(--radius); margin-top: 0.25rem; font-family: monospace; font-size: 0.875rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discovered PDFs -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📄 Discovered PDFs</h5>
+                </div>
+                <div id="discoveredPdfsList" style="padding: 1rem; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Email Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📧 Email Preview</h5>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem; font-size: 0.875rem;">
+                        <strong>To:</strong> <span id="emailTo"></span><br>
+                        <strong>Subject:</strong> <span id="emailSubject"></span>
+                    </div>
+                    <div id="emailPreview" style="border: 1px solid hsl(var(--border)); padding: 1rem; background: white; border-radius: var(--radius); max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- Email Status -->
+            <div id="emailStatus" style="margin-top: 1rem; padding: 1rem; border-radius: var(--radius);"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.test-step {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.test-step.pending {
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--muted-foreground));
+}
+
+.test-step.running {
+    background: hsl(220, 90%, 95%);
+    color: hsl(220, 90%, 40%);
+    font-weight: 500;
+}
+
+.test-step.completed {
+    background: hsl(142, 76%, 95%);
+    color: hsl(142, 76%, 36%);
+}
+
+.test-step.failed {
+    background: hsl(0, 84%, 95%);
+    color: hsl(0, 84%, 40%);
+}
+
+.test-step .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.pdf-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border));
+    font-size: 0.875rem;
+}
+
+.pdf-item:last-child {
+    border-bottom: none;
+}
+
+.pdf-item strong {
+    color: hsl(var(--foreground));
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.pdf-item small {
+    color: hsl(var(--muted-foreground));
+}
+
+.relevance-score {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+</style>
+
+<script>
+// Test Discovery Form Handler
+document.getElementById('testDiscoveryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const searchTerm = formData.get('searchTerm');
+    const testEmail = formData.get('testEmail');
+    const maxResults = parseInt(formData.get('maxResults'));
+    const daysBack = parseInt(formData.get('daysBack'));
+
+    // Show progress section
+    const progressDiv = document.getElementById('testProgress');
+    const resultsDiv = document.getElementById('testResults');
+    const stepsDiv = document.getElementById('testSteps');
+
+    progressDiv.style.display = 'block';
+    resultsDiv.style.display = 'none';
+    stepsDiv.innerHTML = '';
+
+    // Define test steps
+    const steps = [
+        { id: 'create-topic', name: 'Creating temporary topic area' },
+        { id: 'discover', name: 'Discovering PDFs with Exa.ai' },
+        { id: 'process', name: 'Processing discovered PDFs' },
+        { id: 'generate', name: 'Generating email content' },
+        { id: 'send', name: 'Sending test email' }
+    ];
+
+    // Create step elements
+    steps.forEach(step => {
+        const stepEl = document.createElement('div');
+        stepEl.id = `step-${step.id}`;
+        stepEl.className = 'test-step pending';
+        stepEl.innerHTML = `
+            <span class="step-icon">⏳</span>
+            <span>${step.name}</span>
+        `;
+        stepsDiv.appendChild(stepEl);
+    });
+
+    try {
+        // Helper to update step status
+        const updateStep = (stepId, status, icon) => {
+            const stepEl = document.getElementById(`step-${stepId}`);
+            stepEl.className = `test-step ${status}`;
+            stepEl.querySelector('.step-icon').innerHTML = icon;
+        };
+
+        // Step 1: Create temporary topic area
+        updateStep('create-topic', 'running', '<div class="spinner"></div>');
+
+        const topicResponse = await fetch('/api/test/create-temp-topic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: `Test: ${searchTerm}`,
+                keywords: searchTerm.split(' ').filter(w => w.length > 3).slice(0, 5)
+            })
+        });
+
+        const topic = await topicResponse.json();
+        updateStep('create-topic', 'completed', '✓');
+
+        // Step 2: Discover PDFs
+        updateStep('discover', 'running', '<div class="spinner"></div>');
+
+        const discoveryResponse = await fetch('/api/discover/exa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                topicAreaId: topic.topicAreaId,
+                options: {
+                    maxResults,
+                    daysBack,
+                    minRelevanceScore: 0.6
+                }
+            })
+        });
+
+        const discovery = await discoveryResponse.json();
+        updateStep('discover', 'completed', '✓');
+
+        // Step 3: Process PDFs (simulate - in reality this would be automatic)
+        updateStep('process', 'running', '<div class="spinner"></div>');
+
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        updateStep('process', 'completed', '✓');
+
+        // Step 4: Generate email
+        updateStep('generate', 'running', '<div class="spinner"></div>');
+
+        const emailResponse = await fetch('/api/test/generate-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                topicAreaId: topic.topicAreaId,
+                topicName: searchTerm,
+                sources: discovery.sources || [],
+                recipientEmail: testEmail
+            })
+        });
+
+        const emailData = await emailResponse.json();
+        updateStep('generate', 'completed', '✓');
+
+        // Step 5: Send email
+        updateStep('send', 'running', '<div class="spinner"></div>');
+
+        const sendResponse = await fetch('/api/test/send-test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                to: testEmail,
+                subject: emailData.subject,
+                html: emailData.html
+            })
+        });
+
+        const sendResult = await sendResponse.json();
+        updateStep('send', 'completed', '✓');
+
+        // Show results
+        resultsDiv.style.display = 'block';
+
+        // Fill in discovery results
+        document.getElementById('testResultsFound').textContent = discovery.resultsFound || 0;
+        document.getElementById('testPdfsFound').textContent = discovery.pdfsFound || 0;
+        document.getElementById('testCost').textContent = '$' + (discovery.costEstimate || '0.01');
+        document.getElementById('testSearchQuery').textContent = discovery.searchQuery || searchTerm;
+
+        // Display discovered PDFs
+        const pdfsList = document.getElementById('discoveredPdfsList');
+        if (discovery.sources && discovery.sources.length > 0) {
+            pdfsList.innerHTML = discovery.sources.map((source, index) => `
+                <div class="pdf-item">
+                    <strong>${index + 1}. ${source.name || source.title}</strong>
+                    <small>
+                        ${source.url ? `<a href="${source.url}" target="_blank" style="color: hsl(var(--primary));">View PDF</a>` : ''}
+                        ${source.settings?.relevanceScore ? `<span class="relevance-score">${Math.round(source.settings.relevanceScore * 100)}% relevant</span>` : ''}
+                    </small>
+                </div>
+            `).join('');
+        } else {
+            pdfsList.innerHTML = '<p class="text-muted text-center">No PDFs discovered</p>';
+        }
+
+        // Email preview
+        document.getElementById('emailTo').textContent = testEmail;
+        document.getElementById('emailSubject').textContent = emailData.subject || 'Test Alert';
+        document.getElementById('emailPreview').innerHTML = emailData.html || '<p>No email content generated</p>';
+
+        // Email status
+        const statusDiv = document.getElementById('emailStatus');
+        if (sendResult.success) {
+            statusDiv.innerHTML = `
+                <div style="background: hsl(142, 76%, 95%); color: hsl(142, 76%, 36%); padding: 1rem; border-radius: var(--radius);">
+                    <strong>✓ Email Sent Successfully!</strong><br>
+                    <small>Check ${testEmail} for the test alert email</small>
+                    ${sendResult.messageId ? `<br><small>Message ID: ${sendResult.messageId}</small>` : ''}
+                </div>
+            `;
+        } else {
+            statusDiv.innerHTML = `
+                <div style="background: hsl(0, 84%, 95%); color: hsl(0, 84%, 40%); padding: 1rem; border-radius: var(--radius);">
+                    <strong>✗ Email Send Failed</strong><br>
+                    <small>${sendResult.error || 'Unknown error'}</small>
+                </div>
+            `;
+        }
+
+        // Clean up temp topic
+        await fetch(`/api/test/cleanup-temp-topic/${topic.topicAreaId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+    } catch (error) {
+        console.error('Test failed:', error);
+        alert('Test failed: ' + error.message);
+
+        // Mark all remaining steps as failed
+        steps.forEach(step => {
+            const stepEl = document.getElementById(`step-${step.id}`);
+            if (stepEl.classList.contains('pending') || stepEl.classList.contains('running')) {
+                stepEl.className = 'test-step failed';
+                stepEl.querySelector('.step-icon').innerHTML = '✗';
+            }
+        });
+    }
+});
+</script>

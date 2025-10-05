@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Alerts - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: hsl(var(--muted) / 0.4);
+        }
+        
+        .header {
+            background: hsl(var(--foreground));
+            color: hsl(var(--background));
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: hsl(var(--background));
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .user-email {
+            color: hsl(var(--background));
+            opacity: 0.8;
+            font-size: 0.875rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 2rem 1rem;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        .section {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .alert-card {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 0.75rem;
+        }
+        
+        .alert-name {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+        
+        .alert-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: calc(var(--radius) * 0.5);
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: hsl(var(--success) / 0.1);
+            color: hsl(var(--success));
+        }
+        
+        .status-inactive {
+            background: hsl(var(--muted));
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .alert-keywords {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+            margin-bottom: 0.75rem;
+        }
+        
+        .alert-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .empty-state h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            z-index: 1001;
+        }
+        
+        .modal-header {
+            margin-bottom: 1.5rem;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <h1>My Intelligence Alerts</h1>
+            <div class="header-actions">
+                <span class="user-email" id="userEmail">Loading...</span>
+                <button onclick="logout()" class="btn btn-secondary" style="background: hsl(var(--background)); color: hsl(var(--foreground));">Logout</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3 id="activeAlertsCount">0</h3>
+                <p>Total Alerts</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="totalReportsCount">0</h3>
+                <p>Reports Received</p>
+            </div>
+            <div class="stat-card">
+                <h3 id="lastEmailDate">Never</h3>
+                <p>Last Email</p>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">Your Alerts</h2>
+                <button onclick="showCreateModal()" class="btn btn-primary">+ Create New Alert</button>
+            </div>
+            
+            <div id="alertsList">
+                <div class="empty-state">
+                    <h3>Loading your alerts...</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-overlay" id="createModalOverlay" onclick="hideCreateModal()"></div>
+    <div class="modal" id="createModal" style="display: none;">
+        <div class="modal-header">
+            <h2 class="modal-title">Create New Alert</h2>
+        </div>
+        <form id="createAlertForm">
+            <div class="form-group">
+                <label for="alertName">Alert Name</label>
+                <input type="text" id="alertName" name="name" class="form-control" required placeholder="e.g., Tech News">
+            </div>
+            
+            <div class="form-group">
+                <label for="alertKeywords">Keywords (comma-separated)</label>
+                <input type="text" id="alertKeywords" name="keywords" class="form-control" required placeholder="e.g., AI, machine learning, automation">
+                <small class="form-help">Separate multiple keywords with commas</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="alertFrequency">Frequency</label>
+                <select id="alertFrequency" name="frequency" class="form-control">
+                    <option value="daily">Daily</option>
+                    <option value="weekly" selected>Weekly</option>
+                    <option value="monthly">Monthly</option>
+                </select>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" onclick="hideCreateModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary">Create Alert</button>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        let alerts = [];
+        
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.isAuthenticated) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                document.getElementById('userEmail').textContent = data.email;
+                loadDashboard();
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login';
+            }
+        }
+        
+        async function loadDashboard() {
+            await Promise.all([
+                loadStats(),
+                loadAlerts()
+            ]);
+        }
+        
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/alerts/stats', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                document.getElementById('activeAlertsCount').textContent = data.totalAlerts || 0;
+                document.getElementById('totalReportsCount').textContent = data.totalReports || 0;
+                
+                if (data.lastEmailDate) {
+                    const date = new Date(data.lastEmailDate);
+                    document.getElementById('lastEmailDate').textContent = date.toLocaleDateString();
+                } else {
+                    document.getElementById('lastEmailDate').textContent = 'Never';
+                }
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+        
+        async function loadAlerts() {
+            try {
+                const response = await fetch('/api/alerts', {
+                    credentials: 'include'
+                });
+                alerts = await response.json();
+                renderAlerts();
+            } catch (error) {
+                console.error('Failed to load alerts:', error);
+                document.getElementById('alertsList').innerHTML = '<div class="empty-state"><h3>Failed to load alerts</h3><p>Please try refreshing the page</p></div>';
+            }
+        }
+        
+        function renderAlerts() {
+            const container = document.getElementById('alertsList');
+            
+            if (alerts.length === 0) {
+                container.innerHTML = '<div class="empty-state"><h3>No alerts yet</h3><p>Create your first alert to start receiving intelligence updates</p></div>';
+                return;
+            }
+            
+            container.innerHTML = alerts.map(alert => '<div class="alert-card"><div class="alert-header"><div><div class="alert-name">' + escapeHtml(alert.name) + '</div><div class="alert-keywords">Keywords: ' + escapeHtml(alert.keywords) + '</div></div><span class="alert-status status-' + (alert.isActive ? 'active' : 'inactive') + '">' + (alert.isActive ? 'Active' : 'Inactive') + '</span></div><div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem; margin-bottom: 0.75rem;">Frequency: ' + alert.frequency + ' • Created: ' + new Date(alert.createdAt).toLocaleDateString() + '</div><div class="alert-actions"><button onclick="toggleAlert(\'' + alert.id + '\', ' + !alert.isActive + ')" class="btn btn-secondary btn-sm">' + (alert.isActive ? 'Pause' : 'Activate') + '</button><button onclick="deleteAlert(\'' + alert.id + '\')" class="btn btn-error btn-sm">Delete</button></div></div>').join('');
+        }
+        
+        document.getElementById('createAlertForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = {
+                name: formData.get('name'),
+                keywords: formData.get('keywords'),
+                frequency: formData.get('frequency')
+            };
+            
+            try {
+                const response = await fetch('/api/alerts', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    hideCreateModal();
+                    loadDashboard();
+                    e.target.reset();
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + (error.error || 'Failed to create alert'));
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        async function toggleAlert(id, isActive) {
+            try {
+                const response = await fetch('/api/alerts/' + id, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ isActive: isActive })
+                });
+                
+                if (response.ok) {
+                    loadDashboard();
+                } else {
+                    alert('Failed to update alert');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function deleteAlert(id) {
+            if (!confirm('Are you sure you want to delete this alert?')) {
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/alerts/' + id, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadDashboard();
+                } else {
+                    alert('Failed to delete alert');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function showCreateModal() {
+            document.getElementById('createModal').style.display = 'block';
+            document.getElementById('createModalOverlay').style.display = 'block';
+        }
+        
+        function hideCreateModal() {
+            document.getElementById('createModal').style.display = 'none';
+            document.getElementById('createModalOverlay').style.display = 'none';
+        }
+        
+        function logout() {
+            window.location.href = '/logout';
+        }
+        
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        checkAuth();
+    </script>
+</body>
+</html>

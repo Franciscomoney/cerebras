@@ -1,0 +1,413 @@
+<!-- Add this section to your admin dashboard -->
+
+<div class="exa-settings-section">
+  <h2>🔍 Exa.ai Discovery Settings</h2>
+
+  <!-- API Key Configuration -->
+  <div class="setting-card">
+    <h3>API Key</h3>
+    <p class="description">
+      Enter your Exa.ai API key. Get one at <a href="https://exa.ai" target="_blank">exa.ai</a>
+    </p>
+    <div class="input-group">
+      <input
+        type="password"
+        id="exa-api-key"
+        placeholder="exa_..."
+        class="form-control"
+      />
+      <button onclick="saveExaApiKey()" class="btn btn-primary">Save API Key</button>
+    </div>
+    <div id="api-key-status" class="status-message"></div>
+  </div>
+
+  <!-- Rate Limits Configuration -->
+  <div class="setting-card">
+    <h3>⚡ Rate Limits (Cost Control)</h3>
+    <p class="description">
+      Control API usage to prevent unexpected costs. Exa charges ~$0.01 per search.
+    </p>
+
+    <div class="rate-limit-inputs">
+      <div class="input-field">
+        <label>Searches per Hour</label>
+        <input
+          type="number"
+          id="searches-per-hour"
+          value="50"
+          min="1"
+          max="1000"
+          class="form-control"
+        />
+        <small>Recommended: 50-100</small>
+      </div>
+
+      <div class="input-field">
+        <label>Searches per Day</label>
+        <input
+          type="number"
+          id="searches-per-day"
+          value="200"
+          min="1"
+          max="5000"
+          class="form-control"
+        />
+        <small>Recommended: 200-500 (~$2-5/day)</small>
+      </div>
+
+      <div class="input-field">
+        <label>Max Results per Search</label>
+        <input
+          type="number"
+          id="max-results"
+          value="10"
+          min="1"
+          max="50"
+          class="form-control"
+        />
+        <small>Recommended: 10</small>
+      </div>
+    </div>
+
+    <button onclick="saveRateLimits()" class="btn btn-primary">Save Rate Limits</button>
+    <div id="rate-limits-status" class="status-message"></div>
+  </div>
+
+  <!-- Usage Statistics -->
+  <div class="setting-card">
+    <h3>📊 Current Usage</h3>
+    <div id="usage-stats">
+      <div class="stat">
+        <span class="stat-label">Searches This Hour:</span>
+        <span id="stat-hour" class="stat-value">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Searches Today:</span>
+        <span id="stat-day" class="stat-value">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Remaining Today:</span>
+        <span id="stat-remaining" class="stat-value">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Estimated Cost Today:</span>
+        <span id="stat-cost" class="stat-value">-</span>
+      </div>
+      <div class="stat">
+        <span class="stat-label">Cache Size:</span>
+        <span id="stat-cache" class="stat-value">-</span>
+      </div>
+    </div>
+    <button onclick="loadUsageStats()" class="btn btn-secondary">Refresh Stats</button>
+  </div>
+
+  <!-- Discovery Test -->
+  <div class="setting-card">
+    <h3>🧪 Test Discovery</h3>
+    <p class="description">
+      Test Exa discovery with a sample topic. This will count towards your rate limits.
+    </p>
+    <select id="test-topic" class="form-control">
+      <option value="">Select a topic area...</option>
+      <!-- Will be populated dynamically -->
+    </select>
+    <button onclick="testExaDiscovery()" class="btn btn-success">Test Discovery</button>
+    <div id="test-results" class="test-results"></div>
+  </div>
+</div>
+
+<style>
+.exa-settings-section {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+}
+
+.setting-card {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.setting-card h3 {
+  margin-top: 0;
+  color: #333;
+}
+
+.description {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 15px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.rate-limit-inputs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.input-field label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  color: #555;
+}
+
+.input-field small {
+  display: block;
+  color: #888;
+  margin-top: 3px;
+  font-size: 12px;
+}
+
+.form-control {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.status-message {
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.status-message.success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-message.error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+#usage-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 15px;
+}
+
+.stat {
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  color: #333;
+}
+
+.test-results {
+  margin-top: 15px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  display: none;
+}
+
+.test-results.show {
+  display: block;
+}
+</style>
+
+<script>
+// Save Exa API Key
+async function saveExaApiKey() {
+  const apiKey = document.getElementById('exa-api-key').value;
+  const statusDiv = document.getElementById('api-key-status');
+
+  if (!apiKey) {
+    showStatus(statusDiv, 'Please enter an API key', 'error');
+    return;
+  }
+
+  try {
+    const response = await fetch('/api/settings/exa-api-key', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showStatus(statusDiv, 'API key saved successfully! ✓', 'success');
+      document.getElementById('exa-api-key').value = '';
+    } else {
+      showStatus(statusDiv, 'Error: ' + data.error, 'error');
+    }
+  } catch (error) {
+    showStatus(statusDiv, 'Error saving API key: ' + error.message, 'error');
+  }
+}
+
+// Save Rate Limits
+async function saveRateLimits() {
+  const rateLimits = {
+    searchesPerHour: parseInt(document.getElementById('searches-per-hour').value),
+    searchesPerDay: parseInt(document.getElementById('searches-per-day').value),
+    maxResultsPerSearch: parseInt(document.getElementById('max-results').value)
+  };
+
+  const statusDiv = document.getElementById('rate-limits-status');
+
+  try {
+    const response = await fetch('/api/settings/exa-rate-limits', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(rateLimits)
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      showStatus(statusDiv, 'Rate limits saved successfully! ✓', 'success');
+      loadUsageStats(); // Refresh stats
+    } else {
+      showStatus(statusDiv, 'Error: ' + data.error, 'error');
+    }
+  } catch (error) {
+    showStatus(statusDiv, 'Error saving rate limits: ' + error.message, 'error');
+  }
+}
+
+// Load Usage Statistics
+async function loadUsageStats() {
+  try {
+    const response = await fetch('/api/discover/exa/stats');
+    const data = await response.json();
+
+    if (data.success) {
+      const stats = data.stats;
+      document.getElementById('stat-hour').textContent =
+        `${stats.searchesThisHour} / ${stats.rateLimits.searchesPerHour}`;
+      document.getElementById('stat-day').textContent =
+        `${stats.searchesThisDay} / ${stats.rateLimits.searchesPerDay}`;
+      document.getElementById('stat-remaining').textContent = stats.remainingToday;
+      document.getElementById('stat-cost').textContent =
+        `$${(stats.searchesThisDay * 0.01).toFixed(2)}`;
+      document.getElementById('stat-cache').textContent = stats.cacheSize;
+    }
+  } catch (error) {
+    console.error('Error loading stats:', error);
+  }
+}
+
+// Test Discovery
+async function testExaDiscovery() {
+  const topicId = document.getElementById('test-topic').value;
+  const resultsDiv = document.getElementById('test-results');
+
+  if (!topicId) {
+    resultsDiv.innerHTML = '<strong>Please select a topic area</strong>';
+    resultsDiv.classList.add('show');
+    return;
+  }
+
+  resultsDiv.innerHTML = '<strong>Testing discovery...</strong>';
+  resultsDiv.classList.add('show');
+
+  try {
+    const response = await fetch('/api/discover/exa', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        topicAreaId: topicId,
+        options: { maxResults: 5 }
+      })
+    });
+
+    const data = await response.json();
+
+    if (data.success) {
+      resultsDiv.innerHTML = `
+        <strong>✓ Discovery successful!</strong><br>
+        Search Query: ${data.searchQuery}<br>
+        Results Found: ${data.resultsFound}<br>
+        PDFs Found: ${data.pdfsFound}<br>
+        Sources Created: ${data.sourcesCreated}<br>
+        Cost: $${data.costEstimate}<br>
+        Searches Remaining Today: ${data.searchesRemainingToday}
+      `;
+    } else {
+      resultsDiv.innerHTML = `<strong>Error:</strong> ${data.error}`;
+    }
+
+    loadUsageStats(); // Refresh stats
+
+  } catch (error) {
+    resultsDiv.innerHTML = `<strong>Error:</strong> ${error.message}`;
+  }
+}
+
+// Helper function
+function showStatus(element, message, type) {
+  element.textContent = message;
+  element.className = `status-message ${type}`;
+  element.style.display = 'block';
+
+  setTimeout(() => {
+    element.style.display = 'none';
+  }, 5000);
+}
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', () => {
+  loadUsageStats();
+  // Load topic areas for test dropdown (implement this based on your API)
+});
+</script>

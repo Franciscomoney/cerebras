@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: hsl(var(--muted) / 0.4);
+        }
+        
+        /* Admin Header */
+        .admin-header {
+            background: hsl(var(--foreground));
+            color: hsl(var(--background));
+            padding: 1rem 0;
+            margin-bottom: 2rem;
+        }
+        
+        .admin-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            color: hsl(var(--background));
+        }
+        
+        /* Tab Navigation */
+        .tab-nav {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid hsl(var(--border));
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 0.75rem 1rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.875rem;
+            color: hsl(var(--muted-foreground));
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        
+        .tab:hover {
+            color: hsl(var(--foreground));
+        }
+        
+        .tab.active {
+            color: hsl(var(--foreground));
+            border-bottom-color: hsl(var(--foreground));
+        }
+        
+        /* Tab Content */
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: hsl(var(--card));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            text-align: center;
+        }
+        
+        .stat-card h3 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .stat-card p {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        /* Custom styles for admin forms */
+        .source-item {
+            background: hsl(var(--muted) / 0.5);
+            padding: 1rem;
+            border-radius: var(--radius);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            gap: 1rem;
+        }
+        
+        .source-item strong {
+            color: hsl(var(--foreground));
+        }
+        
+        .source-item small {
+            color: hsl(var(--muted-foreground));
+        }
+        
+        .document-card {
+            background: hsl(var(--muted) / 0.5);
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-card h4 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .document-meta {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+            margin-bottom: 1rem;
+        }
+        
+        .document-summary {
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+        
+        .document-actions {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .document-actions a {
+            color: hsl(var(--primary));
+            text-decoration: none;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .document-actions a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <div class="container">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1>Admin Dashboard - Franciscomoney Intel</h1>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <span style="color: hsl(var(--background)); opacity: 0.8; font-size: 0.875rem;">Admin Login:</span>
+                    <code style="background: hsl(var(--background) / 0.2); padding: 0.25rem 0.5rem; border-radius: var(--radius); font-size: 0.875rem;">
+                        f@pachoman.com / C@rlos2025
+                    </code>
+                    <a href="/logout" style="background: hsl(var(--background)); color: hsl(var(--foreground)); padding: 0.5rem 1rem; border-radius: var(--radius); text-decoration: none; font-size: 0.875rem; font-weight: 500; border: 1px solid hsl(var(--background) / 0.2);">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="tab-nav">
+            <button class="tab active" onclick="showTab('overview', event)">Overview</button>
+            <button class="tab" onclick="showTab('users', event)">Users</button>
+            <button class="tab" onclick="showTab('topics', event)">Topic Areas</button>
+            <button class="tab" onclick="showTab('sources', event)">Sources</button>
+            <button class="tab" onclick="showTab('sponsors', event)">Sponsors</button>
+            <button class="tab" onclick="showTab('api', event)">API Config</button>
+            <button class="tab" onclick="showTab('official', event)">Official</button>
+            <button class="tab" onclick="showTab('analytics', event)">Analytics</button>
+            <button class="tab" onclick="showTab('test', event)">Test Discovery</button>
+        </div>
+        
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="totalUsers">0</h3>
+                    <p>Total Users</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="activeAlerts">0</h3>
+                    <p>Active Alerts</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="emailsSent">0</h3>
+                    <p>Emails Sent</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="documentsProcessed">0</h3>
+                    <p>Documents Processed</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Users Tab -->
+        <div id="users" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Users Management</h3>
+                    <p class="card-description">View and manage all registered users and their interests</p>
+                </div>
+                
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Email</th>
+                                <th>Name</th>
+                                <th>Alerts</th>
+                                <th>Interest Areas</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">Loading users...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Topic Areas Tab -->
+        <div id="topics" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Topic Areas</h3>
+                    <p class="card-description">Define topic categories for organizing content</p>
+                </div>
+                
+                <form id="topicForm">
+                    <div class="form-group">
+                        <label>Topic Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., CBDCs" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Keywords <span class="text-muted text-xs">(comma-separated)</span></label>
+                        <input type="text" name="keywords" class="form-control" placeholder="central bank, digital currency, CBDC">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Topic Area</button>
+                </form>
+                
+                <div class="mt-6">
+                    <h4 class="mb-4">Existing Topics</h4>
+                    <div id="topicsList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sources Tab -->
+        <div id="sources" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Manage Sources</h3>
+                    <p class="card-description">Configure data sources for automatic document collection</p>
+                </div>
+                
+                <form id="sourceForm">
+                    <div class="form-group">
+                        <label>Topic Area</label>
+                        <select name="topicAreaId" class="form-control" required>
+                            <option value="">Select topic area...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Source Name</label>
+                        <input type="text" name="name" class="form-control" placeholder="e.g., BIS Reports" required>
+                    </div>
+                    <div class="form-group">
+                        <label>URL</label>
+                        <input type="url" name="url" class="form-control" placeholder="https://www.bis.org/publications/" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Type</label>
+                        <select name="type" class="form-control">
+                            <option value="pdf">PDF</option>
+                            <option value="rss">RSS Feed</option>
+                            <option value="webpage">Web Page</option>
+                            <option value="api">API</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Source</button>
+                </form>
+                
+                <div class="mt-6">
+                    <div class="mb-4">
+                        <button class="btn btn-success" onclick="processAllSources()">Process All Sources Now</button>
+                        <span id="processStatus" class="text-muted text-sm ml-4"></span>
+                    </div>
+                    <h4 class="mb-4">Active Sources</h4>
+                    <div id="sourcesList"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sponsors Tab -->
+        <div id="sponsors" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Sponsored Content</h3>
+                    <p class="card-description">Manage sponsored content for email campaigns</p>
+                </div>
+                
+                <form id="sponsorForm">
+                    <div class="form-group">
+                        <label>Title</label>
+                        <input type="text" name="title" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Content</label>
+                        <textarea name="content" class="form-control" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Link</label>
+                        <input type="url" name="link" class="form-control" placeholder="https://sponsor-website.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Target Topic Areas</label>
+                        <select name="topicAreas" multiple class="form-control" style="height: 100px;">
+                            <!-- Options loaded dynamically -->
+                        </select>
+                        <small class="text-muted text-xs">Hold Ctrl/Cmd to select multiple</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Sponsor</button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- API Config Tab -->
+        <div id="api" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">API Configuration</h3>
+                    <p class="card-description">Configure external API integrations</p>
+                </div>
+                
+                <form id="apiForm">
+                    <div class="form-group">
+                        <label>Cerebras API Key</label>
+                        <input type="password" name="cerebras_api_key" class="form-control" placeholder="Enter your Cerebras API key">
+                        <small class="text-muted text-xs">This will update the server's .env file</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Exa.ai API Key</label>
+                        <input type="password" name="exa_api_key" class="form-control" placeholder="Enter your Exa.ai API key">
+                        <small class="text-muted text-xs">For real-time semantic PDF discovery. Get your key at <a href="https://exa.ai" target="_blank" style="color: hsl(var(--primary));">exa.ai</a></small>
+                    </div>
+                    <button type="submit" class="btn btn-success">Update API Key</button>
+                    <button type="button" class="btn btn-ghost ml-2" onclick="testApiConnection()">Test Connection</button>
+                </form>
+                
+                <div class="mt-4">
+                    <span class="badge" id="apiStatus">Status Unknown</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Official Tab -->
+        <div id="official" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Official Documents</h3>
+                    <p class="card-description">View and manage processed documents</p>
+                </div>
+                
+                <div class="form-group">
+                    <label>Filter by Topic</label>
+                    <select id="officialTopicSelect" class="form-control" onchange="loadOfficialDocuments()">
+                        <option value="">All Topics</option>
+                    </select>
+                </div>
+                
+                <div id="officialDocumentsList" class="mt-6">
+                    <p class="text-muted text-center">Loading documents...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Analytics Tab -->
+        <div id="analytics" class="tab-content">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Analytics</h3>
+                    <p class="card-description">Email open rates, click-through rates, and engagement metrics</p>
+                </div>
+                
+                <div class="text-center py-8 text-muted">
+                    <p>Analytics data will appear here</p>
+                </div>
+
+<!-- Test Tab -->
+<div id="test" class="tab-content" style="display: none;">
+    <div class="card" style="padding: 20px; margin: 20px; background: white; border-radius: 8px; border: 1px solid #ddd;">
+        <div class="card-header" style="padding: 20px; border-bottom: 1px solid #eee; margin-bottom: 20px;">
+            <h3 class="card-title">🧪 Test End-to-End Discovery & Email</h3>
+            <p class="card-description">Test the complete flow: search → discover PDFs → process → generate summary → send email</p>
+        </div>
+
+        <form id="testDiscoveryForm">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Search Topic/Keywords</label>
+                <input type="text" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" name="searchTerm" class="form-control" placeholder="e.g., Central Bank Digital Currencies" required>
+                <small class="text-muted text-xs">What topic should we search for?</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Test Email Address</label>
+                <input type="email" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" name="testEmail" class="form-control" placeholder="your@email.com" required>
+                <small class="text-muted text-xs">Where should we send the test alert?</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Number of PDFs to Include</label>
+                <input type="number" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" name="maxResults" class="form-control" value="5" min="1" max="10">
+                <small class="text-muted text-xs">How many PDFs to discover and include in email (1-10)</small>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333;">Search Period</label>
+                <select style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" name="daysBack" class="form-control">
+                    <option value="7">Last 7 days</option>
+                    <option value="15" selected>Last 15 days</option>
+                    <option value="30">Last 30 days</option>
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg" style="padding: 15px 30px; font-size: 16px; font-weight: 600; background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 20px;">
+                🚀 Run Full Test (Discovery + Email)
+            </button>
+        </form>
+
+        <!-- Progress Display -->
+        <div id="testProgress" style="display: none; margin-top: 2rem; padding: 1.5rem; background: hsl(var(--muted) / 0.3); border-radius: var(--radius);">
+            <h4 style="font-size: 1rem; margin-bottom: 1rem;">Test Progress:</h4>
+            <div id="testSteps"></div>
+        </div>
+
+        <!-- Results Display -->
+        <div id="testResults" style="display: none; margin-top: 2rem;">
+            <h4 style="font-size: 1.125rem; margin-bottom: 1rem;">Test Results:</h4>
+
+            <!-- Discovery Results -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📊 Discovery Results</h5>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; font-size: 0.875rem;">
+                        <div>
+                            <strong id="testResultsFound">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">Total Results</div>
+                        </div>
+                        <div>
+                            <strong id="testPdfsFound">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">PDFs Found</div>
+                        </div>
+                        <div>
+                            <strong id="testCost">-</strong>
+                            <div style="color: hsl(var(--muted-foreground)); font-size: 0.75rem;">Cost</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 1rem;">
+                        <strong style="font-size: 0.875rem;">Search Query Used:</strong>
+                        <div id="testSearchQuery" style="padding: 0.5rem; background: hsl(var(--muted) / 0.5); border-radius: var(--radius); margin-top: 0.25rem; font-family: monospace; font-size: 0.875rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Discovered PDFs -->
+            <div class="card" style="margin-bottom: 1rem;">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📄 Discovered PDFs</h5>
+                </div>
+                <div id="discoveredPdfsList" style="padding: 1rem; max-height: 300px; overflow-y: auto;"></div>
+            </div>
+
+            <!-- Email Preview -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 style="font-size: 1rem; margin: 0;">📧 Email Preview</h5>
+                </div>
+                <div style="padding: 1rem;">
+                    <div style="margin-bottom: 1rem; font-size: 0.875rem;">
+                        <strong>To:</strong> <span id="emailTo"></span><br>
+                        <strong>Subject:</strong> <span id="emailSubject"></span>
+                    </div>
+                    <div id="emailPreview" style="border: 1px solid hsl(var(--border)); padding: 1rem; background: white; border-radius: var(--radius); max-height: 400px; overflow-y: auto;"></div>
+                </div>
+            </div>
+
+            <!-- Email Status -->
+            <div id="emailStatus" style="margin-top: 1rem; padding: 1rem; border-radius: var(--radius);"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.test-step {
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.test-step.pending {
+    background: hsl(var(--muted) / 0.5);
+    color: hsl(var(--muted-foreground));
+}
+
+.test-step.running {
+    background: hsl(220, 90%, 95%);
+    color: hsl(220, 90%, 40%);
+    font-weight: 500;
+}
+
+.test-step.completed {
+    background: hsl(142, 76%, 95%);
+    color: hsl(142, 76%, 36%);
+}
+
+.test-step.failed {
+    background: hsl(0, 84%, 95%);
+    color: hsl(0, 84%, 40%);
+}
+
+.test-step .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.pdf-item {
+    padding: 0.75rem;
+    border-bottom: 1px solid hsl(var(--border));
+    font-size: 0.875rem;
+}
+
+.pdf-item:last-child {
+    border-bottom: none;
+}
+
+.pdf-item strong {
+    color: hsl(var(--foreground));
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.pdf-item small {
+    color: hsl(var(--muted-foreground));
+}
+
+.relevance-score {
+    display: inline-block;
+    padding: 0.125rem 0.5rem;
+    background: hsl(var(--primary) / 0.1);
+    color: hsl(var(--primary));
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+}
+</style>
+
+<script>
+// Test Discovery Form Handler
+document.getElementById('testDiscoveryForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const searchTerm = formData.get('searchTerm');
+    const testEmail = formData.get('testEmail');
+    const maxResults = parseInt(formData.get('maxResults'));
+    const daysBack = parseInt(formData.get('daysBack'));
+
+    // Show progress section
+    const progressDiv = document.getElementById('testProgress');
+    const resultsDiv = document.getElementById('testResults');
+    const stepsDiv = document.getElementById('testSteps');
+
+    progressDiv.style.display = 'block';
+    resultsDiv.style.display = 'none';
+    stepsDiv.innerHTML = '';
+
+    // Define test steps
+    const steps = [
+        { id: 'create-topic', name: 'Creating temporary topic area' },
+        { id: 'discover', name: 'Discovering PDFs with Exa.ai' },
+        { id: 'process', name: 'Processing discovered PDFs' },
+        { id: 'generate', name: 'Generating email content' },
+        { id: 'send', name: 'Sending test email' }
+    ];
+
+    // Create step elements
+    steps.forEach(step => {
+        const stepEl = document.createElement('div');
+        stepEl.id = `step-${step.id}`;
+        stepEl.className = 'test-step pending';
+        stepEl.innerHTML = `
+            <span class="step-icon">⏳</span>
+            <span>${step.name}</span>
+        `;
+        stepsDiv.appendChild(stepEl);
+    });
+
+    try {
+        // Helper to update step status
+        const updateStep = (stepId, status, icon) => {
+            const stepEl = document.getElementById(`step-${stepId}`);
+            stepEl.className = `test-step ${status}`;
+            stepEl.querySelector('.step-icon').innerHTML = icon;
+        };
+
+        // Step 1: Create temporary topic area
+        updateStep('create-topic', 'running', '<div class="spinner"></div>');
+
+        const topicResponse = await fetch('/api/test/create-temp-topic', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                name: `Test: ${searchTerm}`,
+                keywords: searchTerm.split(' ').filter(w => w.length > 3).slice(0, 5)
+            })
+        });
+
+        const topic = await topicResponse.json();
+        updateStep('create-topic', 'completed', '✓');
+
+        // Step 2: Discover PDFs
+        updateStep('discover', 'running', '<div class="spinner"></div>');
+
+        const discoveryResponse = await fetch('/api/discover/exa', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                topicAreaId: topic.topicAreaId,
+                options: {
+                    maxResults,
+                    daysBack,
+                    minRelevanceScore: 0.6
+                }
+            })
+        });
+
+        const discovery = await discoveryResponse.json();
+        updateStep('discover', 'completed', '✓');
+
+        // Step 3: Process PDFs (simulate - in reality this would be automatic)
+        updateStep('process', 'running', '<div class="spinner"></div>');
+
+        // Simulate processing delay
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        updateStep('process', 'completed', '✓');
+
+        // Step 4: Generate email
+        updateStep('generate', 'running', '<div class="spinner"></div>');
+
+        const emailResponse = await fetch('/api/test/generate-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                topicAreaId: topic.topicAreaId,
+                topicName: searchTerm,
+                sources: discovery.sources || [],
+                recipientEmail: testEmail
+            })
+        });
+
+        const emailData = await emailResponse.json();
+        updateStep('generate', 'completed', '✓');
+
+        // Step 5: Send email
+        updateStep('send', 'running', '<div class="spinner"></div>');
+
+        const sendResponse = await fetch('/api/test/send-test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+                to: testEmail,
+                subject: emailData.subject,
+                html: emailData.html
+            })
+        });
+
+        const sendResult = await sendResponse.json();
+        updateStep('send', 'completed', '✓');
+
+        // Show results
+        resultsDiv.style.display = 'block';
+
+        // Fill in discovery results
+        document.getElementById('testResultsFound').textContent = discovery.resultsFound || 0;
+        document.getElementById('testPdfsFound').textContent = discovery.pdfsFound || 0;
+        document.getElementById('testCost').textContent = '$' + (discovery.costEstimate || '0.01');
+        document.getElementById('testSearchQuery').textContent = discovery.searchQuery || searchTerm;
+
+        // Display discovered PDFs
+        const pdfsList = document.getElementById('discoveredPdfsList');
+        if (discovery.sources && discovery.sources.length > 0) {
+            pdfsList.innerHTML = discovery.sources.map((source, index) => `
+                <div class="pdf-item">
+                    <strong>${index + 1}. ${source.name || source.title}</strong>
+                    <small>
+                        ${source.url ? `<a href="${source.url}" target="_blank" style="color: hsl(var(--primary));">View PDF</a>` : ''}
+                        ${source.settings?.relevanceScore ? `<span class="relevance-score">${Math.round(source.settings.relevanceScore * 100)}% relevant</span>` : ''}
+                    </small>
+                </div>
+            `).join('');
+        } else {
+            pdfsList.innerHTML = '<p class="text-muted text-center">No PDFs discovered</p>';
+        }
+
+        // Email preview
+        document.getElementById('emailTo').textContent = testEmail;
+        document.getElementById('emailSubject').textContent = emailData.subject || 'Test Alert';
+        document.getElementById('emailPreview').innerHTML = emailData.html || '<p>No email content generated</p>';
+
+        // Email status
+        const statusDiv = document.getElementById('emailStatus');
+        if (sendResult.success) {
+            statusDiv.innerHTML = `
+                <div style="background: hsl(142, 76%, 95%); color: hsl(142, 76%, 36%); padding: 1rem; border-radius: var(--radius);">
+                    <strong>✓ Email Sent Successfully!</strong><br>
+                    <small>Check ${testEmail} for the test alert email</small>
+                    ${sendResult.messageId ? `<br><small>Message ID: ${sendResult.messageId}</small>` : ''}
+                </div>
+            `;
+        } else {
+            statusDiv.innerHTML = `
+                <div style="background: hsl(0, 84%, 95%); color: hsl(0, 84%, 40%); padding: 1rem; border-radius: var(--radius);">
+                    <strong>✗ Email Send Failed</strong><br>
+                    <small>${sendResult.error || 'Unknown error'}</small>
+                </div>
+            `;
+        }
+
+        // Clean up temp topic
+        await fetch(`/api/test/cleanup-temp-topic/${topic.topicAreaId}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+    } catch (error) {
+        console.error('Test failed:', error);
+        alert('Test failed: ' + error.message);
+
+        // Mark all remaining steps as failed
+        steps.forEach(step => {
+            const stepEl = document.getElementById(`step-${step.id}`);
+            if (stepEl.classList.contains('pending') || stepEl.classList.contains('running')) {
+                stepEl.className = 'test-step failed';
+                stepEl.querySelector('.step-icon').innerHTML = '✗';
+            }
+        });
+    }
+});
+</script>
+    <script>
+        // Tab switching
+        function showTab(tabName, event) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Admin authentication check
+        async function checkAdminAuth() {
+            try {
+                const response = await fetch('/api/auth/status', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (!data.isAuthenticated || !data.isAdmin) {
+                    alert('Please login as admin first');
+                    window.location.href = '/login';
+                    return false;
+                }
+                return true;
+            } catch (error) {
+                console.error('Auth check error:', error);
+                alert('Authentication error. Please login first.');
+                window.location.href = '/login';
+                return false;
+            }
+        }
+        
+        // API configuration
+        document.getElementById('apiForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/api-config', {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        cerebras_api_key: formData.get('cerebras_api_key')
+                    })
+                });
+                
+                if (response.ok) {
+                    alert('API key updated successfully');
+                    e.target.reset();
+                } else {
+                    alert('Error updating API key');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        });
+        
+        async function testApiConnection() {
+            const statusEl = document.getElementById('apiStatus');
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'badge badge-warning';
+            
+            try {
+                const response = await fetch('/api/admin/api-test', {
+                    credentials: 'include'
+                });
+                const data = await response.json();
+                
+                if (data.status === 'active') {
+                    statusEl.textContent = 'API Active';
+                    statusEl.className = 'badge badge-success';
+                } else {
+                    statusEl.textContent = 'API Inactive';
+                    statusEl.className = 'badge badge-error';
+                }
+            } catch (error) {
+                statusEl.textContent = 'Test Failed';
+                statusEl.className = 'badge badge-error';
+            }
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    credentials: 'include'
+                });
+                const stats = await response.json();
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('activeAlerts').textContent = stats.activeAlerts || 0;
+                document.getElementById('emailsSent').textContent = stats.emailsSent || 0;
+                document.getElementById('documentsProcessed').textContent = stats.documentsProcessed || 0;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+        
+        // Load topics
+        async function loadTopics() {
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    credentials: 'include'
+                });
+                const topics = await response.json();
+                
+                // Update topic select in sources form
+                const topicSelect = document.querySelector('select[name="topicAreaId"]');
+                const sponsorTopicSelect = document.querySelector('select[name="topicAreas"]');
+                
+                topicSelect.innerHTML = '<option value="">Select topic area...</option>';
+                sponsorTopicSelect.innerHTML = '';
+                
+                topics.forEach(topic => {
+                    topicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                    sponsorTopicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                });
+                
+                // Display topics list
+                const topicsList = document.getElementById('topicsList');
+                topicsList.innerHTML = topics.map(topic => `
+                    <div class="source-item">
+                        <div>
+                            <strong>${topic.name}</strong>
+                            <br><small>${topic.description || 'No description'}</small>
+                            <br><small class="text-xs">Keywords: ${topic.keywords ? topic.keywords.join(', ') : 'None'}</small>
+                        </div>
+                        <button class="btn btn-danger btn-sm" onclick="deleteTopic('${topic.id}')">Delete</button>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading topics:', error);
+            }
+        }
+        
+        // Load sources
+        async function loadSources() {
+            try {
+                const response = await fetch('/api/admin/sources', {
+                    credentials: 'include'
+                });
+                const sources = await response.json();
+                
+                const sourcesList = document.getElementById('sourcesList');
+                sourcesList.innerHTML = sources.map(source => `
+                    <div class="source-item">
+                        <div>
+                            <strong>${source.name}</strong> - <span class="text-muted">${source.url}</span>
+                            <br><small>Type: ${source.type} | Topic: ${source.topicArea ? source.topicArea.name : 'None'}</small>
+                        </div>
+                        <div class="flex gap-2">
+                            <button class="btn btn-sm" onclick="processSource('${source.id}')">Process</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteSource('${source.id}')">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading sources:', error);
+            }
+        }
+        
+        // Load users
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    credentials: 'include'
+                });
+                const users = await response.json();
+                
+                const usersTableBody = document.getElementById('usersTableBody');
+                
+                if (users.length === 0) {
+                    usersTableBody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No users found</td></tr>';
+                    return;
+                }
+                
+                usersTableBody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.email}</td>
+                        <td>${user.name || '<span class="text-muted">N/A</span>'}</td>
+                        <td>${user.alertsCount || 0}</td>
+                        <td>
+                            ${user.interestAreas && user.interestAreas.length > 0 
+                                ? user.interestAreas.map(k => `<span class="badge">${k}</span>`).join(' ')
+                                : '<span class="text-muted">None</span>'
+                            }
+                        </td>
+                        <td><span class="badge ${user.isActive ? 'badge-success' : 'badge-warning'}">${user.isActive ? 'Active' : 'Inactive'}</span></td>
+                        <td>
+                            <button class="btn btn-danger btn-sm" onclick="deleteUser('${user.id}')">Delete</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading users:', error);
+                document.getElementById('usersTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-muted">Error loading users</td></tr>';
+            }
+        }
+        
+        // Topic form submission
+        document.getElementById('topicForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        name: formData.get('name'),
+                        description: formData.get('description'),
+                        keywords: formData.get('keywords')
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    loadTopics();
+                    alert('Topic created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating topic: ' + error.message);
+            }
+        });
+        
+        // Source form submission
+        document.getElementById('sourceForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            try {
+                const response = await fetch('/api/admin/sources', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        topicAreaId: formData.get('topicAreaId'),
+                        name: formData.get('name'),
+                        url: formData.get('url'),
+                        type: formData.get('type')
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    loadSources();
+                    alert('Source created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating source: ' + error.message);
+            }
+        });
+        
+        // Sponsor form submission
+        document.getElementById('sponsorForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            
+            const topicAreas = Array.from(e.target.topicAreas.selectedOptions).map(opt => opt.value);
+            
+            try {
+                const response = await fetch('/api/admin/sponsors', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        title: formData.get('title'),
+                        content: formData.get('content'),
+                        link: formData.get('link'),
+                        topicAreas: topicAreas
+                    })
+                });
+                
+                if (response.ok) {
+                    e.target.reset();
+                    alert('Sponsor created successfully');
+                } else {
+                    const error = await response.json();
+                    alert('Error: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error creating sponsor: ' + error.message);
+            }
+        });
+        
+        // Delete functions
+        async function deleteTopic(id) {
+            if (!confirm('Are you sure?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/topics/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadTopics();
+                } else {
+                    alert('Error deleting topic');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function deleteSource(id) {
+            if (!confirm('Are you sure?')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/sources/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    loadSources();
+                } else {
+                    alert('Error deleting source');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        async function deleteUser(id) {
+            if (!confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+            
+            try {
+                const response = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                if (response.ok) {
+                    alert('User deleted successfully');
+                    loadUsers();
+                    loadStats(); // Update stats
+                } else {
+                    const error = await response.json();
+                    alert('Error deleting user: ' + error.error);
+                }
+            } catch (error) {
+                alert('Error deleting user: ' + error.message);
+            }
+        }
+        
+        // Process single source
+        async function processSource(id) {
+            const statusEl = document.getElementById('processStatus');
+            statusEl.textContent = 'Processing source...';
+            
+            try {
+                const response = await fetch(`/api/admin/sources/${id}/process`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = result.message;
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        loadOfficialDocuments(); // Refresh documents if on Official tab
+                    }, 3000);
+                } else {
+                    statusEl.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Process all sources
+        async function processAllSources() {
+            const statusEl = document.getElementById('processStatus');
+            statusEl.textContent = 'Processing all sources...';
+            
+            try {
+                const response = await fetch('/api/admin/process-sources', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    statusEl.textContent = result.message;
+                    setTimeout(() => {
+                        statusEl.textContent = '';
+                        loadOfficialDocuments(); // Refresh documents if on Official tab
+                        loadStats(); // Update stats
+                    }, 3000);
+                } else {
+                    statusEl.textContent = 'Error: ' + result.error;
+                }
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+            }
+        }
+        
+        // Load official documents
+        async function loadOfficialDocuments() {
+            try {
+                const topicId = document.getElementById('officialTopicSelect').value;
+                const url = topicId 
+                    ? `/api/admin/documents?topicId=${topicId}`
+                    : '/api/admin/documents';
+                
+                const response = await fetch(url, {
+                    credentials: 'include'
+                });
+                const documents = await response.json();
+                
+                const documentsList = document.getElementById('officialDocumentsList');
+                
+                if (documents.length === 0) {
+                    documentsList.innerHTML = '<p class="text-muted text-center">No documents processed yet.</p>';
+                    return;
+                }
+                
+                documentsList.innerHTML = documents.map(doc => `
+                    <div class="document-card">
+                        <h4>${doc.title}</h4>
+                        <div class="document-meta">
+                            ID: ${doc.code} | Source: ${doc.sourceName} | Topic: ${doc.topicName} | Date: ${new Date(doc.processedAt).toLocaleDateString()}
+                        </div>
+                        <div class="document-summary">
+                            ${doc.summary || 'No summary available'}
+                        </div>
+                        <div class="document-actions">
+                            <a href="/${doc.code}.html" target="_blank">View HTML Page →</a>
+                            <a href="/api/documents/${doc.id}/markdown" target="_blank">Download Markdown</a>
+                            ${doc.originalUrl ? `<a href="${doc.originalUrl}" target="_blank">Original Source</a>` : ''}
+                            <button onclick="deleteDocument('${doc.id}', '${doc.code}')" class="btn btn-danger btn-sm">Delete</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading documents:', error);
+                document.getElementById('officialDocumentsList').innerHTML = '<p class="text-muted text-center">Error loading documents</p>';
+            }
+        }
+        
+        // Update topic selects to include official tab
+        async function loadTopicsWithOfficial() {
+            await loadTopics();
+            
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    credentials: 'include'
+                });
+                const topics = await response.json();
+                
+                const officialTopicSelect = document.getElementById('officialTopicSelect');
+                officialTopicSelect.innerHTML = '<option value="">All Topics</option>';
+                
+                topics.forEach(topic => {
+                    officialTopicSelect.innerHTML += `<option value="${topic.id}">${topic.name}</option>`;
+                });
+            } catch (error) {
+                console.error('Error loading topics for official tab:', error);
+            }
+        }
+        
+        // Delete document function
+        async function deleteDocument(documentId, documentCode) {
+            if (!confirm(`Are you sure you want to delete document ${documentCode}? This cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/admin/documents/${documentId}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Document deleted successfully');
+                    loadOfficialDocuments(); // Refresh the list
+                    loadStats(); // Update stats
+                } else {
+                    alert('Error deleting document: ' + result.error);
+                }
+            } catch (error) {
+                alert('Error deleting document: ' + error.message);
+            }
+        }
+        
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAdminAuth();
+            if (isAuthenticated) {
+                loadStats();
+                loadTopicsWithOfficial();
+                loadSources();
+                loadUsers();
+                
+                // Refresh stats every 30 seconds
+                setInterval(loadStats, 30000);
+            }
+        });
+    </script>
+cat /tmp/test-tab-fix.html
+<script>
+// Force test tab to work
+document.addEventListener('DOMContentLoaded', function() {
+    const testTabButton = Array.from(document.querySelectorAll('.tab')).find(btn => 
+        btn.textContent.includes('Test Discovery')
+    );
+    
+    if (testTabButton) {
+        testTabButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(t => {
+                t.style.display = 'none';
+                t.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            
+            // Show test tab
+            const testTab = document.getElementById('test');
+            if (testTab) {
+                testTab.style.display = 'block';
+                testTab.classList.add('active');
+            }
+            
+            // Mark button as active
+            this.classList.add('active');
+            
+            console.log('Test Discovery tab activated');
+        });
+    }
+});
+</script>
+</body>
+</html>

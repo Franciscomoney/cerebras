@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franciscomoney Intel - API Configuration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #34495e;
+        }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        .status-section {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .status-title {
+            font-weight: 600;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        
+        .key-status {
+            font-family: monospace;
+            padding: 10px;
+            background-color: #e9f7fe;
+            border-radius: 4px;
+            margin: 10px 0;
+            word-break: break-all;
+        }
+        
+        .message {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Franciscomoney Intel - API Configuration</h1>
+        
+        <form id="apiKeyForm">
+            <div class="form-group">
+                <label for="cerebrasApiKey">Cerebras API Key</label>
+                <input type="text" id="cerebrasApiKey" name="cerebrasApiKey" required>
+            </div>
+            <button type="submit">Save API Key</button>
+        </form>
+        
+        <div class="status-section">
+            <div class="status-title">Current Key Status:</div>
+            <div class="key-status" id="keyStatus">No key configured</div>
+        </div>
+        
+        <div class="message success" id="successMessage">
+            API key saved successfully!
+        </div>
+        
+        <div class="message error" id="errorMessage">
+            Error saving API key. Please try again.
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('apiKeyForm');
+            const keyStatus = document.getElementById('keyStatus');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+            
+            // Check if key exists on page load
+            fetch('/api/key')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.key) {
+                        displayKeyStatus(data.key);
+                    }
+                })
+                .catch(() => {
+                    keyStatus.textContent = 'Unable to retrieve key status';
+                });
+            
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const apiKey = document.getElementById('cerebrasApiKey').value;
+                
+                fetch('/api/key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ key: apiKey })
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Failed to save key');
+                    }
+                })
+                .then(data => {
+                    if (data.key) {
+                        displayKeyStatus(data.key);
+                        showMessage(successMessage, 'API key saved successfully!');
+                        form.reset();
+                    } else {
+                        throw new Error('Invalid response');
+                    }
+                })
+                .catch(() => {
+                    showMessage(errorMessage, 'Error saving API key. Please try again.');
+                });
+            });
+            
+            function displayKeyStatus(key) {
+                if (key && key.length > 0) {
+                    const maskedKey = key.substring(0, 4) + '...' + key.substring(key.length - 4);
+                    keyStatus.textContent = maskedKey;
+                } else {
+                    keyStatus.textContent = 'No key configured';
+                }
+            }
+            
+            function showMessage(element, text) {
+                element.textContent = text;
+                element.style.display = 'block';
+                
+                // Hide message after 5 seconds
+                setTimeout(() => {
+                    element.style.display = 'none';
+                }, 5000);
+                
+                // Hide the other message if it's visible
+                if (element === successMessage) {
+                    errorMessage.style.display = 'none';
+                } else {
+                    successMessage.style.display = 'none';
+                }
+            }
+        });
+    </script>
+</body>
+</html>

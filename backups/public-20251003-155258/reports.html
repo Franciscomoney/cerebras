@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reports History - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .report-card {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .sentiment-badge {
+            text-transform: capitalize;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 3rem;
+            padding-top: 2rem;
+        }
+
+        .page-info {
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <h1>Franciscomoney Intel</h1>
+            <div class="nav-links">
+                <a href="/dashboard">My Alerts</a>
+                <a href="/reports" class="active">Reports</a>
+                <a href="/logout" class="logout-btn">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container py-8">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold">Intelligence Reports</h2>
+            <p class="text-muted text-sm mt-2">Browse all analyzed documents and intelligence reports</p>
+        </div>
+
+        <!-- Filters -->
+        <div class="card mb-8 p-6">
+            <div class="flex flex-wrap gap-4 items-end">
+                <div class="flex-1 min-w-[200px]">
+                    <label for="alertFilter" class="text-sm font-medium mb-2 block">Alert</label>
+                    <select id="alertFilter" class="form-control">
+                        <option value="">All Alerts</option>
+                    </select>
+                </div>
+                
+                <div class="flex-1 min-w-[200px]">
+                    <label for="sentimentFilter" class="text-sm font-medium mb-2 block">Sentiment</label>
+                    <select id="sentimentFilter" class="form-control">
+                        <option value="">All Sentiments</option>
+                        <option value="positive">Positive</option>
+                        <option value="neutral">Neutral</option>
+                        <option value="negative">Negative</option>
+                    </select>
+                </div>
+                
+                <div class="flex-1 min-w-[200px]">
+                    <label for="dateFilter" class="text-sm font-medium mb-2 block">Date Range</label>
+                    <select id="dateFilter" class="form-control">
+                        <option value="">All Time</option>
+                        <option value="week">Past Week</option>
+                        <option value="month">Past Month</option>
+                        <option value="quarter">Past 3 Months</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <button class="btn btn-primary" onclick="applyFilters()">Apply Filters</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Grid -->
+        <div id="reportsContainer">
+            <div class="text-center py-12 text-muted">
+                <p>Loading reports...</p>
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        <div id="pagination" class="pagination hidden">
+            <button id="prevBtn" class="btn" onclick="changePage(-1)" disabled>Previous</button>
+            <span class="page-info text-muted">
+                Page <span id="currentPage">1</span> of <span id="totalPages">1</span>
+            </span>
+            <button id="nextBtn" class="btn" onclick="changePage(1)">Next</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+        let currentFilters = {};
+        let userAlerts = [];
+
+        // Check authentication
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/auth/status');
+                const data = await response.json();
+                
+                if (!data.isAuthenticated) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                // Load user alerts and reports
+                loadUserAlerts();
+                loadReports();
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                window.location.href = '/login';
+            }
+        }
+
+        // Load user alerts for filter
+        async function loadUserAlerts() {
+            try {
+                const response = await fetch('/api/alerts');
+                userAlerts = await response.json();
+                
+                const alertFilter = document.getElementById('alertFilter');
+                alertFilter.innerHTML = '<option value="">All Alerts</option>' + 
+                    userAlerts.map(alert => 
+                        `<option value="${alert.id}">${escapeHtml(alert.name)}</option>`
+                    ).join('');
+            } catch (error) {
+                console.error('Failed to load alerts:', error);
+            }
+        }
+
+        // Load reports
+        async function loadReports(page = 1) {
+            const container = document.getElementById('reportsContainer');
+            container.innerHTML = '<div class="text-center py-12 text-muted"><p>Loading reports...</p></div>';
+            
+            try {
+                const params = new URLSearchParams({
+                    page,
+                    limit: 12,
+                    ...currentFilters
+                });
+                
+                const response = await fetch(`/api/reports?${params}`);
+                const data = await response.json();
+                
+                if (!data.reports || data.reports.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center py-12">
+                            <h3 class="text-lg font-medium mb-2">No reports found</h3>
+                            <p class="text-muted text-sm mb-4">Reports will appear here once your alerts generate them</p>
+                            <a href="/dashboard" class="btn btn-primary">Manage Alerts</a>
+                        </div>
+                    `;
+                    document.getElementById('pagination').classList.add('hidden');
+                    return;
+                }
+                
+                // Render reports
+                container.innerHTML = `
+                    <div class="reports-grid">
+                        ${data.reports.map(report => renderReportCard(report)).join('')}
+                    </div>
+                `;
+                
+                // Update pagination
+                currentPage = data.page;
+                totalPages = data.totalPages;
+                updatePagination();
+                
+            } catch (error) {
+                console.error('Failed to load reports:', error);
+                container.innerHTML = `
+                    <div class="text-center py-12">
+                        <h3 class="text-lg font-medium mb-2">Error loading reports</h3>
+                        <p class="text-muted text-sm">Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Render a single report card
+        function renderReportCard(report) {
+            const sentiment = report.document?.aiAnalysis?.sentiment || 'neutral';
+            const relevance = report.document?.aiAnalysis?.relevanceScore || 0;
+            const sentAt = new Date(report.sentAt).toLocaleDateString();
+            
+            return `
+                <div class="report-card card" onclick="window.location.href='/${report.document.code}.html'">
+                    <div class="p-4 border-b">
+                        <div class="text-muted text-sm">${report.document.code}</div>
+                        <h3 class="font-medium mt-2 line-clamp-2">${escapeHtml(report.document.title)}</h3>
+                    </div>
+                    <div class="p-4">
+                        <p class="text-muted text-sm line-clamp-3 mb-4">
+                            ${escapeHtml(report.document.aiAnalysis?.summary || 'No summary available')}
+                        </p>
+                        <div class="flex gap-4 text-xs text-muted">
+                            <span>📅 ${sentAt}</span>
+                            <span class="sentiment-badge badge badge-${sentiment}">${sentiment}</span>
+                            <span>📊 ${relevance}%</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            currentFilters = {
+                alertId: document.getElementById('alertFilter').value,
+                sentiment: document.getElementById('sentimentFilter').value,
+                dateRange: document.getElementById('dateFilter').value
+            };
+            
+            // Remove empty filters
+            Object.keys(currentFilters).forEach(key => {
+                if (!currentFilters[key]) delete currentFilters[key];
+            });
+            
+            loadReports(1);
+        }
+
+        // Change page
+        function changePage(direction) {
+            const newPage = currentPage + direction;
+            if (newPage >= 1 && newPage <= totalPages) {
+                loadReports(newPage);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+
+        // Update pagination UI
+        function updatePagination() {
+            const pagination = document.getElementById('pagination');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const currentPageSpan = document.getElementById('currentPage');
+            const totalPagesSpan = document.getElementById('totalPages');
+            
+            if (totalPages <= 1) {
+                pagination.classList.add('hidden');
+                return;
+            }
+            
+            pagination.classList.remove('hidden');
+            currentPageSpan.textContent = currentPage;
+            totalPagesSpan.textContent = totalPages;
+            
+            prevBtn.disabled = currentPage === 1;
+            nextBtn.disabled = currentPage === totalPages;
+        }
+
+        // Utility functions
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+
+        // Initialize
+        checkAuth();
+    </script>
+</body>
+</html>

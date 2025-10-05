@@ -1,0 +1,466 @@
+const axios = require('axios');
+const { Op } = require('sequelize');
+const logger = require('../utils/logger');
+const cerebrasService = require('./cerebras');
+
+/**
+ * Exa.ai Powered PDF Discovery Service
+ * Real-time semantic search for research publications
+ *
+ * COST CONTROLS:
+ * - Rate limiting: Max searches per hour/day
+ * - Query optimization: Combines multiple keywords into single searches
+ * - Caching: Stores results to avoid duplicate searches
+ * - Smart batching: Groups similar topics before searching
+ */
+class ExaDiscoveryService {
+  constructor(models) {
+    this.models = models;
+    this.exaApiKey = null; // Will be loaded from settings
+    this.exaApiUrl = 'https://api.exa.ai/search';
+
+    // COST CONTROL: Rate limiting
+    this.rateLimits = {
+      searchesPerHour: 50,      // Max 50 searches per hour
+      searchesPerDay: 200,      // Max 200 searches per day
+      maxResultsPerSearch: 10   // Limit results to control costs
+    };
+
+    // COST CONTROL: Cache to avoid duplicate searches
+    this.searchCache = new Map(); // In-memory cache (consider Redis for production)
+    this.cacheExpiryMs = 1000 * 60 * 60 * 24; // 24 hours
+
+    // COST CONTROL: Track usage
+    this.usageStats = {
+      searchesThisHour: 0,
+      searchesThisDay: 0,
+      lastHourReset: Date.now(),
+      lastDayReset: Date.now()
+    };
+  }
+
+  /**
+   * Initialize API key from admin settings
+   */
+  async initialize() {
+    try {
+      // Load Exa API key from settings table or environment
+      const exaKeySetting = await this.models.Setting?.findOne({
+        where: { key: 'EXA_API_KEY' }
+      });
+
+      this.exaApiKey = exaKeySetting?.value || process.env.EXA_API_KEY;
+
+      if (!this.exaApiKey) {
+        logger.warn('Exa API key not configured. Discovery will be limited.');
+        return false;
+      }
+
+      logger.info('Exa Discovery Service initialized');
+      return true;
+    } catch (error) {
+      logger.error('Error initializing Exa Discovery:', error);
+      return false;
+    }
+  }
+
+  /**
+   * Main discovery function with cost controls
+   */
+  async discoverPDFs(topicAreaId, options = {}) {
+    const {
+      maxResults = 20,
+      daysBack = 7,
+      minRelevanceScore = 0.7,
+      forceRefresh = false
+    } = options;
+
+    try {
+      await this.initialize();
+
+      if (!this.exaApiKey) {
+        throw new Error('Exa API key not configured. Please add it in admin settings.');
+      }
+
+      logger.info(`Starting Exa-powered discovery for topic: ${topicAreaId}`);
+
+      // Step 1: Get topic area
+      const topicArea = await this.models.TopicArea.findByPk(topicAreaId);
+      if (!topicArea) {
+        throw new Error(`Topic area ${topicAreaId} not found`);
+      }
+
+      // COST CONTROL: Check rate limits before proceeding
+      this.checkRateLimits();
+
+      // Step 2: Build optimized search query (combines keywords intelligently)
+      const searchQuery = await this.buildSearchQuery(topicArea);
+      logger.info(`Search query: ${searchQuery}`);
+
+      // COST CONTROL: Check cache first
+      const cacheKey = `${topicAreaId}_${searchQuery}_${daysBack}`;
+      if (!forceRefresh) {
+        const cached = this.getCachedResults(cacheKey);
+        if (cached) {
+          logger.info('Returning cached results (cost: $0)');
+          return cached;
+        }
+      }
+
+      // Step 3: Execute Exa search (SINGLE API CALL - cost optimized)
+      const searchResults = await this.executeExaSearch(searchQuery, {
+        numResults: this.rateLimits.maxResultsPerSearch,
+        includeDomains: this.getTrustedDomains(),
+        startPublishedDate: this.getDateString(daysBack),
+        type: 'neural', // Semantic search
+        category: 'research paper'
+      });
+
+      logger.info(`Exa returned ${searchResults.length} results`);
+
+      // Step 4: Filter for PDFs and extract metadata
+      const pdfResults = searchResults
+        .filter(result => result.url.toLowerCase().endsWith('.pdf') || result.url.includes('.pdf'))
+        .map(result => ({
+          url: result.url,
+          title: result.title,
+          description: result.text,
+          publishedAt: result.publishedDate || new Date(),
+          exaScore: result.score,
+          author: result.author,
+          highlights: result.highlights
+        }));
+
+      // Step 5: Use Cerebras (cheap model) to score relevance
+      const scoredResults = await this.scoreResultsWithCerebras(pdfResults, topicArea);
+
+      // Step 6: Filter by relevance threshold
+      const qualified = scoredResults
+        .filter(r => r.relevanceScore >= minRelevanceScore)
+        .slice(0, maxResults);
+
+      // Step 7: Create sources in database
+      const sources = await this.createSources(topicAreaId, qualified);
+
+      // COST CONTROL: Cache results
+      const response = {
+        topicArea: topicArea.name,
+        searchQuery,
+        resultsFound: searchResults.length,
+        pdfsFound: pdfResults.length,
+        sourcesCreated: sources.length,
+        sources,
+        costEstimate: this.estimateCost(1), // 1 search
+        searchesRemainingToday: this.rateLimits.searchesPerDay - this.usageStats.searchesThisDay
+      };
+
+      this.cacheResults(cacheKey, response);
+
+      return response;
+
+    } catch (error) {
+      logger.error('Error in Exa discovery:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Build optimized search query from topic area
+   * COST OPTIMIZATION: Combine keywords into one query instead of multiple searches
+   */
+  async buildSearchQuery(topicArea) {
+    const keywords = topicArea.keywords || [];
+    const name = topicArea.name;
+    const description = topicArea.description || '';
+
+    // Use Cerebras (cheap 8B model) to create optimal search query
+    const prompt = `Create a concise semantic search query for finding research PDFs about:
+Topic: ${name}
+Description: ${description}
+Keywords: ${keywords.join(', ')}
+
+Return ONLY the search query text (1-2 sentences max, no quotes or extra text):`;
+
+    try {
+      const query = await cerebrasService.generateCompletion(prompt, {
+        model: 'llama3.1-8b', // Fast and cheap
+        temperature: 0.3,
+        max_tokens: 100
+      });
+
+      return query.trim();
+    } catch (error) {
+      logger.error('Error building query with Cerebras:', error);
+      // Fallback: simple concatenation
+      return `${name} ${keywords.slice(0, 3).join(' ')} research paper report`;
+    }
+  }
+
+  /**
+   * Execute Exa search with cost controls
+   */
+  async executeExaSearch(query, options = {}) {
+    // COST CONTROL: Increment usage counter
+    this.usageStats.searchesThisHour++;
+    this.usageStats.searchesThisDay++;
+
+    try {
+      const response = await axios.post(this.exaApiUrl, {
+        query,
+        num_results: options.numResults || 10,
+        include_domains: options.includeDomains,
+        start_published_date: options.startPublishedDate,
+        type: options.type || 'neural',
+        category: options.category,
+        use_autoprompt: true, // Let Exa optimize the query
+        contents: {
+          text: { max_characters: 500 }, // Limit text to control costs
+          highlights: { num_sentences: 2 }
+        }
+      }, {
+        headers: {
+          'Authorization': `Bearer ${this.exaApiKey}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 30000
+      });
+
+      logger.info(`Exa search successful. Cost: ~$${this.estimateCost(1)}`);
+      return response.data.results || [];
+
+    } catch (error) {
+      logger.error('Exa API error:', error.response?.data || error.message);
+
+      // COST CONTROL: Don't count failed requests
+      this.usageStats.searchesThisHour--;
+      this.usageStats.searchesThisDay--;
+
+      throw new Error(`Exa search failed: ${error.message}`);
+    }
+  }
+
+  /**
+   * Score results using Cerebras (cheap model)
+   * COST OPTIMIZATION: Batch scoring in one API call
+   */
+  async scoreResultsWithCerebras(results, topicArea) {
+    if (results.length === 0) return [];
+
+    const prompt = `Rate relevance of these research papers to topic "${topicArea.name}" (keywords: ${topicArea.keywords?.join(', ')})
+
+Papers:
+${results.map((r, i) => `${i}. ${r.title} - ${r.description?.substring(0, 100)}...`).join('\n')}
+
+Return ONLY JSON array with scores 0-1:
+[{"index": 0, "score": 0.95}, {"index": 1, "score": 0.78}, ...]`;
+
+    try {
+      const response = await cerebrasService.generateCompletion(prompt, {
+        model: 'llama3.1-8b', // Cheap model for simple scoring
+        temperature: 0.2,
+        max_tokens: 500
+      });
+
+      const jsonMatch = response.match(/\[[\s\S]*\]/);
+      if (!jsonMatch) {
+        // Fallback: use Exa scores
+        return results.map(r => ({
+          ...r,
+          relevanceScore: r.exaScore || 0.7
+        }));
+      }
+
+      const scores = JSON.parse(jsonMatch[0]);
+      return results.map((r, i) => ({
+        ...r,
+        relevanceScore: scores.find(s => s.index === i)?.score || 0.5
+      })).sort((a, b) => b.relevanceScore - a.relevanceScore);
+
+    } catch (error) {
+      logger.error('Error scoring with Cerebras:', error);
+      return results.map(r => ({
+        ...r,
+        relevanceScore: r.exaScore || 0.5
+      }));
+    }
+  }
+
+  /**
+   * Create source records in database
+   */
+  async createSources(topicAreaId, results) {
+    const sources = [];
+
+    for (const result of results) {
+      try {
+        // Check if already exists
+        const existing = await this.models.Source.findOne({
+          where: { url: result.url }
+        });
+
+        if (existing) {
+          logger.info(`Source exists: ${result.url}`);
+          sources.push(existing);
+          continue;
+        }
+
+        const source = await this.models.Source.create({
+          topicAreaId,
+          name: result.title,
+          url: result.url,
+          type: 'pdf',
+          isActive: true,
+          settings: {
+            discoveredAt: new Date(),
+            publishedAt: result.publishedAt,
+            description: result.description,
+            relevanceScore: result.relevanceScore,
+            exaScore: result.exaScore,
+            author: result.author,
+            discoveryMethod: 'exa',
+            automated: true
+          }
+        });
+
+        sources.push(source);
+        logger.info(`Created source: ${source.name}`);
+
+      } catch (error) {
+        logger.error(`Error creating source: ${error.message}`);
+      }
+    }
+
+    return sources;
+  }
+
+  /**
+   * COST CONTROL: Check rate limits
+   */
+  checkRateLimits() {
+    // Reset hour counter if needed
+    if (Date.now() - this.usageStats.lastHourReset > 1000 * 60 * 60) {
+      this.usageStats.searchesThisHour = 0;
+      this.usageStats.lastHourReset = Date.now();
+    }
+
+    // Reset day counter if needed
+    if (Date.now() - this.usageStats.lastDayReset > 1000 * 60 * 60 * 24) {
+      this.usageStats.searchesThisDay = 0;
+      this.usageStats.lastDayReset = Date.now();
+    }
+
+    // Check limits
+    if (this.usageStats.searchesThisHour >= this.rateLimits.searchesPerHour) {
+      throw new Error(`Hourly rate limit reached (${this.rateLimits.searchesPerHour} searches/hour). Try again in ${Math.ceil((this.usageStats.lastHourReset + 1000 * 60 * 60 - Date.now()) / 1000 / 60)} minutes.`);
+    }
+
+    if (this.usageStats.searchesThisDay >= this.rateLimits.searchesPerDay) {
+      throw new Error(`Daily rate limit reached (${this.rateLimits.searchesPerDay} searches/day). Try again tomorrow.`);
+    }
+  }
+
+  /**
+   * COST CONTROL: Cache management
+   */
+  getCachedResults(key) {
+    const cached = this.searchCache.get(key);
+    if (!cached) return null;
+
+    // Check expiry
+    if (Date.now() - cached.timestamp > this.cacheExpiryMs) {
+      this.searchCache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  cacheResults(key, data) {
+    this.searchCache.set(key, {
+      data,
+      timestamp: Date.now()
+    });
+
+    // Clean old cache entries (keep max 100 entries)
+    if (this.searchCache.size > 100) {
+      const firstKey = this.searchCache.keys().next().value;
+      this.searchCache.delete(firstKey);
+    }
+  }
+
+  /**
+   * COST CONTROL: Estimate API costs
+   */
+  estimateCost(numSearches) {
+    // Exa.ai pricing: ~$0.01 per search (approximate)
+    return (numSearches * 0.01).toFixed(3);
+  }
+
+  /**
+   * Get trusted research domains for filtering
+   */
+  getTrustedDomains() {
+    return [
+      'brookings.edu',
+      'csis.org',
+      'atlanticcouncil.org',
+      'carnegieendowment.org',
+      'cfr.org',
+      'rand.org',
+      'heritage.org',
+      'aei.org',
+      'americanprogress.org',
+      'hoover.org',
+      'ecfr.eu',
+      'chathamhouse.org',
+      'crisisgroup.org',
+      'sipri.org',
+      'mit.edu',
+      'harvard.edu',
+      'stanford.edu',
+      'nber.org',
+      'worldbank.org',
+      'imf.org',
+      'oecd.org',
+      'bis.org'
+    ];
+  }
+
+  /**
+   * Get date string for Exa query (YYYY-MM-DD)
+   */
+  getDateString(daysBack) {
+    const date = new Date();
+    date.setDate(date.getDate() - daysBack);
+    return date.toISOString().split('T')[0];
+  }
+
+  /**
+   * Get usage statistics
+   */
+  getUsageStats() {
+    return {
+      ...this.usageStats,
+      remainingToday: this.rateLimits.searchesPerDay - this.usageStats.searchesThisDay,
+      remainingThisHour: this.rateLimits.searchesPerHour - this.usageStats.searchesThisHour,
+      cacheSize: this.searchCache.size,
+      rateLimits: this.rateLimits
+    };
+  }
+
+  /**
+   * Update rate limits (admin function)
+   */
+  updateRateLimits(newLimits) {
+    this.rateLimits = {
+      ...this.rateLimits,
+      ...newLimits
+    };
+    logger.info('Rate limits updated:', this.rateLimits);
+  }
+}
+
+// Export singleton instance with models
+const models = require('../models');
+const exaDiscoveryInstance = new ExaDiscoveryService(models);
+module.exports = exaDiscoveryInstance;

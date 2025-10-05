@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franciscomoney Intel - AI-Powered Intelligence Alerts</title>
+    <meta name="description" content="Get personalized intelligence reports powered by AI. Track CBDCs, tokenization, climate finance, and more with curated insights delivered weekly.">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Reset and base styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: #fafafa;
+            color: #020817;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        /* Navigation */
+        .navbar {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem 0;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .nav-container h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .nav-links a {
+            margin-left: 1.5rem;
+            text-decoration: none;
+            color: #020817;
+            font-size: 0.875rem;
+        }
+
+        .nav-links a:hover {
+            color: #1e40af;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+            background: white;
+        }
+
+        .hero-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .hero-subtitle {
+            font-size: 1.125rem;
+            color: #64748b;
+            margin-bottom: 2rem;
+        }
+
+        .hero-form {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero-input {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            outline: none;
+            width: 300px;
+            max-width: 100%;
+        }
+
+        .hero-input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+        }
+
+        .hero-button {
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            font-weight: 500;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .hero-button:hover {
+            background: #1d4ed8;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 4rem 0;
+            background: #fafafa;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 3rem;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .feature-card {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-description {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* How it Works Section */
+        .how-it-works {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .steps {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .step {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .step-number {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .step-content h3 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .step-content p {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        /* Sample Report Section */
+        .sample {
+            padding: 4rem 0;
+            background: #fafafa;
+        }
+
+        .sample-preview {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .email-preview {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        .email-header {
+            background: #f1f5f9;
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .email-body {
+            padding: 1.5rem;
+        }
+
+        .report-item {
+            background: #f8fafc;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            border-left: 3px solid #3b82f6;
+        }
+
+        .report-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-summary {
+            color: #475569;
+            font-size: 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .report-meta {
+            font-size: 0.75rem;
+            color: #94a3b8;
+        }
+
+        /* CTA Section */
+        .cta {
+            background: white;
+            padding: 4rem 0;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .cta h2 {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            color: #64748b;
+            font-size: 1.125rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Footer */
+        .footer {
+            background: #0f172a;
+            color: #94a3b8;
+            padding: 2rem 0;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        .footer a {
+            color: #60a5fa;
+            text-decoration: none;
+            margin: 0 0.5rem;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1rem;
+            overflow-y: auto;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 1.5rem;
+            position: relative;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        .modal-close:hover {
+            color: #020817;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #020817;
+            font-size: 0.875rem;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
+            outline: none;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-help {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin-top: 0.25rem;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+            border: 1px solid #cbd5e1;
+            border-radius: 0.375rem;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            background: #f1f5f9;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+            border: 1px solid #3b82f6;
+        }
+
+        .btn-primary:hover {
+            background: #1d4ed8;
+        }
+
+        .success-message {
+            background: #dcfce7;
+            color: #166534;
+            padding: 0.75rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            text-align: center;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+            
+            .hero-subtitle {
+                font-size: 1rem;
+            }
+            
+            .hero-form {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .hero-input {
+                width: 100%;
+                max-width: 400px;
+            }
+            
+            .section-title {
+                font-size: 1.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container nav-container">
+            <h1>Franciscomoney Intel</h1>
+            <div class="nav-links">
+                <a href="/login">Login</a>
+                <a href="/register">Sign Up</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>Intelligence That Matters, Delivered Weekly</h1>
+            <p class="hero-subtitle">AI-powered analysis of financial and technological developments, personalized for your interests</p>
+            
+            <form id="heroForm" class="hero-form" onsubmit="return false;">
+                <input type="text" 
+                       id="heroKeywords" 
+                       class="hero-input" 
+                       placeholder="What topics interest you? (e.g., CBDCs, tokenization)"
+                       required>
+                <button type="button" class="hero-button" onclick="submitHeroForm()">Create Alert</button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Key Features</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3 class="feature-title">AI-Powered Analysis</h3>
+                    <p class="feature-description">
+                        Our AI analyzes hundreds of documents to extract key insights, 
+                        themes, and implications specifically relevant to your interests.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="feature-title">Personalized Summaries</h3>
+                    <p class="feature-description">
+                        Each report is tailored to your keywords. The same document yields 
+                        different insights based on what matters to you.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <div class="feature-icon">📧</div>
+                    <h3 class="feature-title">Weekly Intelligence</h3>
+                    <p class="feature-description">
+                        Receive curated reports every week with the top 5 most relevant 
+                        documents, complete with analysis and impact scores.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section class="how-it-works">
+        <div class="container">
+            <h2 class="section-title">How It Works</h2>
+            
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h3>Set Your Interests</h3>
+                        <p>Tell us what topics you want to track - CBDCs, tokenization, climate finance, 
+                           AI regulation, or any other financial/tech developments.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h3>AI Analyzes Sources</h3>
+                        <p>Our system continuously monitors curated sources including central banks, 
+                           regulatory bodies, and industry leaders for new publications.</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h3>Receive Personalized Reports</h3>
+                        <p>Get weekly emails with AI-generated summaries, key insights, sentiment analysis, 
+                           and relevance scores - all tailored to your specific interests.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sample Report -->
+    <section class="sample">
+        <div class="container">
+            <h2 class="section-title">Sample Report</h2>
+            
+            <div class="sample-preview">
+                <div class="email-preview">
+                    <div class="email-header">
+                        <strong>From:</strong> Franciscomoney Intel<br>
+                        <strong>Subject:</strong> Your CBDC Intel: 3 Key Developments This Week
+                    </div>
+                    <div class="email-body">
+                        <p>Hi there,</p>
+                        <p>Here are this week's most relevant CBDC insights, analyzed and summarized by AI:</p>
+                        
+                        <div class="report-item">
+                            <div class="report-title">1. Financial stability implications of tokenisation</div>
+                            <p class="report-summary">
+                                The FSB report reveals tokenisation is growing rapidly with most projects using 
+                                permissioned DLT platforms. Key risks include liquidity mismatches and regulatory gaps.
+                            </p>
+                            <div class="report-meta">
+                                Relevance: ●●●●●●●○○○ 70% | Sentiment: Neutral | Urgency: Medium
+                            </div>
+                        </div>
+                        
+                        <div class="report-item">
+                            <div class="report-title">2. Digital Euro implementation timeline updated</div>
+                            <p class="report-summary">
+                                ECB announces preparation phase extending to 2025, focusing on rulebook development 
+                                and technical infrastructure for offline functionality.
+                            </p>
+                            <div class="report-meta">
+                                Relevance: ●●●●●●●●●○ 90% | Sentiment: Positive | Urgency: High
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+        <div class="container">
+            <h2>Start Receiving Intelligence That Matters</h2>
+            <p>Join professionals staying ahead of financial and technological changes</p>
+            <button class="hero-button" onclick="document.getElementById('heroKeywords').focus()">
+                Create Your First Alert
+            </button>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 Franciscomoney Intel. All rights reserved.</p>
+            <p>
+                <a href="/login">Login</a> • 
+                <a href="/register">Sign Up</a> • 
+                <a href="/admin">Admin</a>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Create Alert Modal -->
+    <div id="createAlertModal" class="modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+            <h2 style="margin-bottom: 0.5rem; font-size: 1.875rem; font-weight: 600;">Create Your Intelligence Alert</h2>
+            <p style="color: hsl(var(--muted-foreground)); margin-bottom: 1.5rem;">Stay informed with AI-powered insights delivered to your inbox</p>
+            
+            <div id="successMessage" class="success-message" style="display: none;">
+                Alert will be created once you verify your email and set your password
+            </div>
+                ✅ Alert created! Please check your email to verify your account.
+            </div>
+            
+            <form id="createAlertForm">
+                <div class="form-group">
+                    <label for="alertName">Alert Name</label>
+                    <input type="text" id="alertName" name="name" class="form-control" placeholder="e.g., Crypto Regulations Watch" required>
+                    <div class="form-help">Choose a descriptive name for this alert</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="keywords">Keywords / Topics</label>
+                    <textarea id="keywords" name="keywords" class="form-control" rows="3" placeholder="e.g., cryptocurrency, bitcoin regulation, SEC crypto, CBDC" required></textarea>
+                    <div class="form-help">Enter keywords separated by commas. We'll track news and insights on these topics.</div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" class="form-control" placeholder="you@example.com" required>
+                    <div class="form-help">We'll send your weekly intelligence reports to this address</div>
+                </div>
+                
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal()" style="flex: 1;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="flex: 2;">
+                        <span id="submitText">Create My Alert</span>
+                        <span id="submitSpinner" style="display: none;">Creating...</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Direct function to handle hero form submission
+        function submitHeroForm() {
+            const keywords = document.getElementById('heroKeywords').value;
+            if (!keywords) {
+                document.getElementById('heroKeywords').focus();
+                return;
+            }
+            
+            // Pre-fill the modal form
+            document.getElementById('keywords').value = keywords;
+            document.getElementById('alertName').value = keywords.split(',')[0].trim() + ' Alert';
+            
+            // Open modal
+            document.getElementById('createAlertModal').style.display = 'block';
+        }
+        // Wait for DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, attaching event handlers...');
+            
+            // Hero form submission
+            const heroForm = document.getElementById('heroForm');
+            if (heroForm) {
+                heroForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Hero form submitted');
+                    
+                    const keywords = document.getElementById('heroKeywords').value;
+                    
+                    // Pre-fill the modal form
+                    document.getElementById('keywords').value = keywords;
+                    document.getElementById('alertName').value = keywords.split(',')[0].trim() + ' Alert';
+                    
+                    // Open modal
+                    document.getElementById('createAlertModal').style.display = 'block';
+                    
+                    return false; // Extra prevention
+                });
+            } else {
+                console.error('Hero form not found!');
+            }
+            
+            // Create alert form submission
+            const createAlertForm = document.getElementById('createAlertForm');
+            if (createAlertForm) {
+                createAlertForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const submitBtn = e.target.querySelector('button[type="submit"]');
+                    const submitText = document.getElementById('submitText');
+                    const submitSpinner = document.getElementById('submitSpinner');
+                    
+                    // Show loading state
+                    submitBtn.disabled = true;
+                    submitText.style.display = 'none';
+                    submitSpinner.style.display = 'inline';
+                    
+                    const formData = new FormData(e.target);
+                    
+                    try {
+                        // Create user and alert
+                        const response = await fetch('/api/auth/register-with-alert', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: formData.get('email'),
+                                alertName: formData.get('name'),
+                                keywords: formData.get('keywords')
+                            })
+                        });
+                        
+                        const data = await response.json();
+                        
+                        if (response.ok) {
+                            document.getElementById('successMessage').style.display = 'block';
+                            e.target.reset();
+                            setTimeout(() => {
+                                closeModal();
+                            }, 3000);
+                        } else {
+                            alert(data.error || 'Failed to create alert');
+                        }
+                    } catch (error) {
+                        alert('Error: ' + error.message);
+                    } finally {
+                        // Reset button state
+                        submitBtn.disabled = false;
+                        submitText.style.display = 'inline';
+                        submitSpinner.style.display = 'none';
+                    }
+                });
+            }
+            
+            // Check for messages in URL
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('verified') === 'true') {
+                alert('Email verified! You can now login to manage your alerts.');
+            }
+        });
+        
+        // Modal close function
+        function closeModal() {
+            document.getElementById('createAlertModal').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+        
+        // Allow closing modal by clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('createAlertModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>

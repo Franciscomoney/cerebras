@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Franciscomoney Intel - Test Page</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 20px; border: 1px solid #ddd; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        button { padding: 10px 20px; margin: 10px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>Franciscomoney Intel - System Test</h1>
+    
+    <div class="test">
+        <h2>1. Health Check</h2>
+        <button onclick="testHealth()">Test Health</button>
+        <div id="health-result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>2. Login Test</h2>
+        <p>Email: f@pachoman.com / Password: C@rlos2025</p>
+        <button onclick="testLogin()">Test Login</button>
+        <div id="login-result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>3. Admin Stats</h2>
+        <button onclick="testAdminStats()">Test Admin Stats</button>
+        <div id="stats-result"></div>
+    </div>
+    
+    <div class="test">
+        <h2>4. Create Topic Area</h2>
+        <button onclick="testCreateTopic()">Create Test Topic</button>
+        <div id="topic-result"></div>
+    </div>
+    
+    <script>
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            try {
+                const response = await fetch('/health');
+                const data = await response.json();
+                result.innerHTML = '<div class="success">✓ Health check passed: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+            } catch (error) {
+                result.innerHTML = '<div class="error">✗ Health check failed: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'f@pachoman.com',
+                        password: 'C@rlos2025'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.innerHTML = '<div class="success">✓ Login successful: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                    localStorage.setItem('isLoggedIn', 'true');
+                } else {
+                    result.innerHTML = '<div class="error">✗ Login failed: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                }
+            } catch (error) {
+                result.innerHTML = '<div class="error">✗ Login error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testAdminStats() {
+            const result = document.getElementById('stats-result');
+            try {
+                const response = await fetch('/api/admin/stats');
+                const data = await response.json();
+                if (response.ok) {
+                    result.innerHTML = '<div class="success">✓ Admin stats retrieved: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                } else {
+                    result.innerHTML = '<div class="error">✗ Stats failed: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                }
+            } catch (error) {
+                result.innerHTML = '<div class="error">✗ Stats error: ' + error.message + '</div>';
+            }
+        }
+        
+        async function testCreateTopic() {
+            const result = document.getElementById('topic-result');
+            try {
+                const response = await fetch('/api/admin/topics', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: 'CBDCs',
+                        description: 'Central Bank Digital Currencies',
+                        keywords: 'digital currency,central bank,CBDC'
+                    })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    result.innerHTML = '<div class="success">✓ Topic created: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                } else {
+                    result.innerHTML = '<div class="error">✗ Create failed: <pre>' + JSON.stringify(data, null, 2) + '</pre></div>';
+                }
+            } catch (error) {
+                result.innerHTML = '<div class="error">✗ Create error: ' + error.message + '</div>';
+            }
+        }
+    </script>
+</body>
+</html>

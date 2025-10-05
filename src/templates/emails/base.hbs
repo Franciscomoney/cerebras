@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Franciscomoney Intel Report</title>
+    <style>
+        /* Reset styles */
+        body, table, td, div, p, a {
+            margin: 0;
+            padding: 0;
+            border: 0;
+            font-size: 100%;
+            font: inherit;
+            vertical-align: baseline;
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            line-height: 1.5;
+            color: #333333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        
+        /* Main container */
+        .email-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+        
+        /* Header styles */
+        .header {
+            background-color: #c0392b;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .logo {
+            color: #ffffff;
+            font-size: 24px;
+            font-weight: bold;
+            text-decoration: none;
+        }
+        
+        /* Content styles */
+        .content {
+            padding: 30px 20px;
+            font-size: 16px;
+        }
+        
+        /* Footer styles */
+        .footer {
+            background-color: #f8f8f8;
+            padding: 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #666666;
+            border-top: 1px solid #eeeeee;
+        }
+        
+        .footer-content {
+            margin-bottom: 15px;
+        }
+        
+        .unsubscribe {
+            color: #c0392b;
+            text-decoration: underline;
+        }
+        
+        /* Responsive adjustments */
+        @media screen and (max-width: 600px) {
+            .email-container {
+                width: 100% !important;
+            }
+            
+            .content {
+                padding: 20px 15px;
+                font-size: 15px;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+            
+            .logo {
+                font-size: 20px;
+            }
+            
+            .footer {
+                padding: 15px;
+                font-size: 13px;
+            }
+        }
+        
+        /* Utility classes */
+        .text-center {
+            text-align: center;
+        }
+        
+        .text-left {
+            text-align: left;
+        }
+        
+        .mb-20 {
+            margin-bottom: 20px;
+        }
+        
+        .mb-10 {
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="email-container">
+        <!-- Header -->
+        <div class="header">
+            <a href="#" class="logo">Franciscomoney Intel</a>
+        </div>
+        
+        <!-- Content Area -->
+        <div class="content">
+            {{content}}
+        </div>
+        
+        <!-- Footer -->
+        <div class="footer">
+            <div class="footer-content">
+                <p class="mb-10">This email contains confidential financial intelligence information.</p>
+                <p class="mb-20">Franciscomoney Intel | 123 Financial District, Suite 1000 | New York, NY 10001</p>
+                <p>You are receiving this email because you subscribed to Franciscomoney Intel reports.</p>
+            </div>
+            <p>
+                <a href="#" class="unsubscribe">Unsubscribe</a> | 
+                <a href="mailto:contact@franciscomoney.com">Contact Us</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

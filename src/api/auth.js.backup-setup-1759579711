@@ -1,0 +1,297 @@
+const express = require("express");
+const router = express.Router();
+const bcrypt = require("bcrypt");
+const { v4: uuidv4 } = require("uuid");
+const crypto = require("crypto");
+const { User, Alert } = require("../models");
+const { sendVerificationEmail, sendAlertEmail, sendWelcomeEmail } = require("../services/emailService");
+const logger = require("../utils/logger");
+
+// Login
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    const isValid = await user.comparePassword(password);
+
+    if (!isValid) {
+      return res.status(401).json({ error: "Invalid credentials" });
+    }
+
+    if (!user.isVerified && !user.isAdmin) {
+      return res.status(401).json({ error: "Please verify your email first" });
+    }
+
+    // Set session
+    req.session.userId = user.id;
+    req.session.isAdmin = user.isAdmin;
+    req.session.userEmail = user.email;
+
+    // Update last login
+    await user.update({ lastLoginAt: new Date() });
+
+    res.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        isAdmin: user.isAdmin,
+        isVerified: user.isVerified
+      }
+    });
+
+  } catch (error) {
+    logger.error("Login error:", error);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+// Register
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const user = await User.create({
+      email,
+      password,
+      verificationToken,
+      isVerified: false,
+      isAdmin: false
+    });
+
+    await sendVerificationEmail(email, verificationToken, alertName);
+
+    res.status(201).json({
+      success: true,
+      message: "Registration successful. Please check your email to verify your account."
+    });
+
+  } catch (error) {
+    logger.error("Registration error:", error);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
+
+// Register with Alert - UPDATED TO USE PENDING DATA
+// Register with Alert - NO PASSWORD, stores in pendingAlertData
+router.post("/register-with-alert", async (req, res) => {
+  try {
+    const { email, alertName, keywords } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: "Email required" });
+    }
+
+    if (!alertName || !keywords) {
+      return res.status(400).json({ error: "Alert name and keywords required" });
+    }
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ where: { email } });
+
+    if (existingUser) {
+      return res.status(400).json({ error: "Email already registered" });
+    }
+
+    // Generate verification token
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+
+    // Store alert data in pendingAlertData - will be created AFTER password setup
+    const pendingAlertData = {
+      alertName,
+      keywords,
+      frequency: "weekly"
+    };
+
+    // Create user WITHOUT password, with verification token and pending alert data
+    const user = await User.create({
+      email,
+      password: null,  // NO PASSWORD YET
+      verificationToken,
+      pendingAlertData,
+      isEmailVerified: false,
+      isVerified: false,
+      isAdmin: false
+    });
+
+    logger.info(`Created user ${user.email} without password, awaiting verification and password setup`);
+
+    // Send verification email
+    await sendVerificationEmail(email, verificationToken, alertName);
+
+    res.status(201).json({
+      success: true,
+      message: "Alert will be created once you verify your email and set your password",
+      requiresVerification: true
+    });
+
+  } catch (error) {
+    logger.error("Registration with alert error:", error);
+    res.status(500).json({ error: "Registration failed: " + error.message });
+  }
+});
+// Verify email - UPDATED to redirect to dashboard for password setup
+router.get("/verify-email/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).send("<h1>Error</h1><p>Verification token is missing.</p>");
+    }
+
+    const user = await User.findOne({ where: { verificationToken: token } });
+
+    if (!user) {
+      return res.status(400).send("<h1>Error</h1><p>Invalid or expired verification token.</p>");
+    }
+
+    // Mark email as verified
+    await user.update({
+      isEmailVerified: true,
+      isVerified: true,
+      verificationToken: null
+    });
+
+    logger.info(`Email verified for user ${user.email}, redirecting to password setup`);
+
+    // Redirect to dashboard with token and email for password setup
+    const siteUrl = process.env.SITE_URL || "http://51.178.253.51:3000";
+    res.redirect(`${siteUrl}/dashboard.html?email=${encodeURIComponent(user.email)}&setup=true`);
+
+  } catch (error) {
+    logger.error("Email verification error:", error);
+    res.status(500).send("<h1>Error</h1><p>Verification failed. Please try again or contact support.</p>");
+  }
+});
+router.get("/verify-email", async (req, res) => {
+  const { token } = req.query;
+  if (token) {
+    // Redirect to new endpoint
+    res.redirect(`/api/auth/verify-email/${token}`);
+  } else {
+    res.status(400).json({ error: "Token required" });
+  }
+});
+
+
+// Complete setup - Set password and create alert from pendingAlertData
+router.post("/complete-setup", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: "Email and password required" });
+    }
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    if (!user.isEmailVerified) {
+      return res.status(400).json({ error: "Email not verified" });
+    }
+
+    if (user.password) {
+      return res.status(400).json({ error: "Password already set. Please use login." });
+    }
+
+    // Set the password
+    await user.update({ password });
+
+    logger.info(`Password set for user ${user.email}`);
+
+    // NOW create the alert from pendingAlertData
+    if (user.pendingAlertData) {
+      try {
+        const alertData = user.pendingAlertData;
+        
+        const alert = await Alert.create({
+          userId: user.id,
+          name: alertData.alertName,
+          keywords: alertData.keywords,
+          query: alertData.keywords,
+          frequency: alertData.frequency || "weekly",
+          isActive: true
+        });
+
+        logger.info(`Created alert ${alert.id} for user ${user.email} after password setup`);
+
+        // Send welcome email with alert info
+        try {
+          await sendWelcomeEmail(user, alertData.alertName);
+          await alert.update({ lastSentAt: new Date() });
+        } catch (emailError) {
+          logger.error(`Error sending welcome email:`, emailError);
+        }
+
+        // Clear pending data
+        await user.update({ pendingAlertData: null });
+
+        res.json({ 
+          success: true, 
+          message: "Setup complete! Your alert is now active.",
+          alertId: alert.id,
+          alertName: alert.name
+        });
+
+      } catch (alertError) {
+        logger.error(`Error creating alert:`, alertError);
+        res.status(500).json({ error: "Password set but failed to create alert. Please create one manually." });
+      }
+    } else {
+      // No pending alert, just confirm password was set
+      res.json({ 
+        success: true, 
+        message: "Password set successfully. You can now login."
+      });
+    }
+
+  } catch (error) {
+    logger.error("Complete setup error:", error);
+    res.status(500).json({ error: "Setup failed: " + error.message });
+  }
+});
+
+// Logout
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      return res.status(500).json({ error: "Logout failed" });
+    }
+    res.json({ success: true, message: "Logged out successfully" });
+  });
+});
+
+// Check auth status
+router.get("/status", (req, res) => {
+  res.json({
+    isAuthenticated: !!req.session.userId,
+    isAdmin: !!req.session.isAdmin,
+    email: req.session.userEmail || null
+  });
+});
+
+module.exports = router;

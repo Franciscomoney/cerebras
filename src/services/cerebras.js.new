@@ -1,0 +1,435 @@
+const axios = require('axios');
+const logger = require('../utils/logger');
+
+/**
+ * Enhanced Cerebras Service with Intelligent Model Selection
+ * Uses different models based on task complexity and cost optimization
+ */
+class CerebrasService {
+  constructor() {
+    this.apiKey = process.env.CEREBRAS_API_KEY;
+    this.baseUrl = 'https://api.cerebras.ai/v1';
+    
+    // Model pricing and capabilities (tokens per second and cost)
+    this.models = {
+      // Ultra-fast, cheapest - for simple tasks
+      'llama3.1-8b': {
+        speed: 'fastest',
+        cost: 'lowest',
+        capabilities: 'basic',
+        tokensPerSec: 2000,
+        bestFor: ['keyword_extraction', 'simple_classification', 'topic_tagging']
+      },
+      // Balanced - for most tasks
+      'llama3.1-70b': {
+        speed: 'fast',
+        cost: 'medium',
+        capabilities: 'advanced',
+        tokensPerSec: 1200,
+        bestFor: ['summarization', 'content_analysis', 'relevance_scoring']
+      },
+      // Most capable - for complex reasoning
+      'llama3.3-70b': {
+        speed: 'moderate',
+        cost: 'highest',
+        capabilities: 'expert',
+        tokensPerSec: 800,
+        bestFor: ['complex_reasoning', 'multi_document_analysis', 'strategic_insights']
+      }
+    };
+    
+    this.rateLimiter = {
+      lastRequestTime: 0,
+      minInterval: 1000
+    };
+    this.maxRetries = 3;
+    
+    this.client = axios.create({
+      baseURL: this.baseUrl,
+      headers: {
+        'Authorization': `Bearer ${this.apiKey || ''}`,
+        'Content-Type': 'application/json'
+      }
+    });
+  }
+
+  /**
+   * Intelligent model selection based on task type
+   */
+  selectModel(taskType, options = {}) {
+    const { forceModel, preferSpeed, preferAccuracy } = options;
+    
+    if (forceModel && this.models[forceModel]) {
+      return forceModel;
+    }
+    
+    // Task-based model selection
+    const modelMapping = {
+      // Fast, cheap tasks - use 8B
+      'keyword_extraction': 'llama3.1-8b',
+      'simple_classification': 'llama3.1-8b',
+      'topic_tagging': 'llama3.1-8b',
+      'url_parsing': 'llama3.1-8b',
+      'date_extraction': 'llama3.1-8b',
+      
+      // Medium complexity - use 70B
+      'summarization': 'llama3.1-70b',
+      'content_analysis': 'llama3.1-70b',
+      'relevance_scoring': 'llama3.1-70b',
+      'entity_extraction': 'llama3.1-70b',
+      'sentiment_analysis': 'llama3.1-70b',
+      
+      // Complex reasoning - use 3.3
+      'complex_reasoning': 'llama3.3-70b',
+      'multi_document_analysis': 'llama3.3-70b',
+      'strategic_insights': 'llama3.3-70b',
+      'personalized_recommendations': 'llama3.3-70b'
+    };
+    
+    let model = modelMapping[taskType] || 'llama3.1-70b'; // Default to balanced
+    
+    // User preferences override
+    if (preferSpeed) {
+      model = 'llama3.1-8b';
+    } else if (preferAccuracy) {
+      model = 'llama3.3-70b';
+    }
+    
+    logger.info(`Selected model: ${model} for task: ${taskType}`);
+    return model;
+  }
+
+  /**
+   * Core API request with retry logic
+   */
+  async _makeRequest(payload, retries = 0) {
+    if (!this.apiKey) {
+      throw new Error('CEREBRAS_API_KEY is not configured');
+    }
+    
+    try {
+      // Rate limiting
+      const now = Date.now();
+      const timeSinceLastRequest = now - this.rateLimiter.lastRequestTime;
+      if (timeSinceLastRequest < this.rateLimiter.minInterval) {
+        await new Promise(resolve => 
+          setTimeout(resolve, this.rateLimiter.minInterval - timeSinceLastRequest)
+        );
+      }
+
+      const startTime = Date.now();
+      logger.info('Cerebras API request', { 
+        model: payload.model,
+        promptLength: payload.messages?.reduce((acc, msg) => acc + msg.content.length, 0) 
+      });
+      
+      this.rateLimiter.lastRequestTime = Date.now();
+      const response = await this.client.post('/chat/completions', payload);
+      
+      const duration = Date.now() - startTime;
+      logger.info('Cerebras API success', { 
+        model: payload.model,
+        duration: `${duration}ms`,
+        responseLength: response.data.choices[0].message.content.length 
+      });
+      
+      return response.data.choices[0].message.content;
+      
+    } catch (error) {
+      logger.error('Cerebras API failed', { 
+        error: error.message, 
+        status: error.response?.status,
+        retries 
+      });
+      
+      if (retries < this.maxRetries) {
+        const delay = Math.pow(2, retries) * 1000;
+        logger.info(`Retrying in ${delay}ms`, { retries: retries + 1 });
+        await new Promise(resolve => setTimeout(resolve, delay));
+        return this._makeRequest(payload, retries + 1);
+      }
+      
+      throw new Error(`Cerebras API error: ${error.response?.data?.error?.message || error.message}`);
+    }
+  }
+
+  /**
+   * Generate completion with automatic model selection
+   */
+  async generateCompletion(prompt, options = {}) {
+    const {
+      taskType = 'content_analysis',
+      temperature = 0.7,
+      max_tokens = 1000,
+      model = null
+    } = options;
+    
+    const selectedModel = model || this.selectModel(taskType, options);
+    
+    const payload = {
+      model: selectedModel,
+      messages: [
+        {
+          role: 'user',
+          content: prompt
+        }
+      ],
+      temperature,
+      max_tokens
+    };
+    
+    return await this._makeRequest(payload);
+  }
+
+  /**
+   * OPTIMIZED: Extract topics from text (uses fast 8B model)
+   */
+  async extractTopics(text, maxTopics = 5) {
+    const prompt = `Extract the ${maxTopics} main topics from this text. Return ONLY a JSON array of strings.
+
+Text: ${text.substring(0, 1000)}
+
+Return format: ["topic1", "topic2", "topic3"]`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'topic_tagging',
+      temperature: 0.2,
+      max_tokens: 200
+    });
+    
+    try {
+      const match = response.match(/\[[\s\S]*\]/);
+      return match ? JSON.parse(match[0]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * OPTIMIZED: Extract keywords (uses fast 8B model)
+   */
+  async extractKeywords(text, maxKeywords = 10) {
+    const prompt = `Extract ${maxKeywords} key terms from this text. Return ONLY a JSON array.
+
+Text: ${text.substring(0, 1000)}
+
+Return format: ["keyword1", "keyword2"]`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'keyword_extraction',
+      temperature: 0.1,
+      max_tokens: 150
+    });
+    
+    try {
+      const match = response.match(/\[[\s\S]*\]/);
+      return match ? JSON.parse(match[0]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * OPTIMIZED: Simple relevance scoring (uses fast 8B model)
+   */
+  async scoreRelevance(documentTitle, documentTopics, keywords) {
+    const prompt = `Score relevance (0-1) of this document to the keywords.
+
+Document: ${documentTitle}
+Topics: ${documentTopics.join(', ')}
+Keywords: ${keywords.join(', ')}
+
+Return ONLY a number between 0 and 1.`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'simple_classification',
+      temperature: 0.1,
+      max_tokens: 10
+    });
+    
+    const score = parseFloat(response.trim());
+    return isNaN(score) ? 0.5 : Math.max(0, Math.min(1, score));
+  }
+
+  /**
+   * OPTIMIZED: Analyze document content (uses balanced 70B model)
+   */
+  async analyzeDocument(content, topicKeywords = []) {
+    const prompt = `Analyze this document and extract key information.
+
+Content: ${content.substring(0, 2000)}
+Keywords: ${topicKeywords.join(', ')}
+
+Return ONLY valid JSON:
+{
+  "summary": "2-3 sentence summary",
+  "topics": ["topic1", "topic2", "topic3"],
+  "entities": {
+    "companies": [],
+    "technologies": [],
+    "locations": [],
+    "people": []
+  },
+  "sentiment": "positive|negative|neutral",
+  "relevanceScore": 0-100
+}`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'content_analysis',
+      temperature: 0.3,
+      max_tokens: 800
+    });
+    
+    try {
+      const match = response.match(/\{[\s\S]*\}/);
+      return match ? JSON.parse(match[0]) : this._getDefaultAnalysis();
+    } catch {
+      return this._getDefaultAnalysis();
+    }
+  }
+
+  /**
+   * OPTIMIZED: Rank documents by relevance (uses balanced 70B model)
+   */
+  async rankDocuments(documents, keywords) {
+    const docList = documents.slice(0, 50).map((doc, i) =>
+      `${i}. ${doc.title} | ${doc.topics || doc.extractedTopics?.join(', ') || ''}`
+    ).join('\n');
+
+    const prompt = `Rank these documents by relevance to: ${keywords.join(', ')}
+
+Documents:
+${docList}
+
+Return ONLY JSON array:
+[{"index": 0, "score": 0.95}, {"index": 1, "score": 0.82}, ...]`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'relevance_scoring',
+      temperature: 0.1,
+      max_tokens: 1000
+    });
+    
+    try {
+      const match = response.match(/\[[\s\S]*\]/);
+      return match ? JSON.parse(match[0]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * OPTIMIZED: Personalized summary generation (uses expert 3.3 model)
+   */
+  async generatePersonalizedSummary(documentContent, userInterests, documentContext) {
+    const prompt = `Create a personalized summary of this document for a user interested in: ${userInterests.join(', ')}
+
+Document: ${documentContext.title}
+Organization: ${documentContext.organization}
+
+Content (first 3000 chars):
+${documentContent.substring(0, 3000)}
+
+Generate:
+1. Executive summary (2-3 sentences) tailored to user interests
+2. Top 3 key insights relevant to their interests
+3. Impact score (0-10) for this user
+4. Bias assessment
+
+Return ONLY JSON:
+{
+  "personalizedSummary": "...",
+  "keyInsights": ["insight1", "insight2", "insight3"],
+  "impactScore": 8,
+  "biasAssessment": "..."
+}`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'personalized_recommendations',
+      temperature: 0.4,
+      max_tokens: 1000
+    });
+    
+    try {
+      const match = response.match(/\{[\s\S]*\}/);
+      return match ? JSON.parse(match[0]) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * OPTIMIZED: Organization relevance assessment (uses fast 8B model)
+   */
+  async assessOrganizationRelevance(organizations, topicArea) {
+    const orgList = organizations.map(org => `- ${org.name} (${org.domain})`).join('\n');
+
+    const prompt = `Rate these organizations for relevance to: ${topicArea.name}
+
+Organizations:
+${orgList}
+
+Return ONLY JSON array:
+[{"name": "Org Name", "score": 9, "reasoning": "brief reason"}, ...]`;
+
+    const response = await this.generateCompletion(prompt, {
+      taskType: 'simple_classification',
+      temperature: 0.2,
+      max_tokens: 1500
+    });
+    
+    try {
+      const match = response.match(/\[[\s\S]*\]/);
+      return match ? JSON.parse(match[0]) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Helper: Default analysis structure
+   */
+  _getDefaultAnalysis() {
+    return {
+      summary: '',
+      topics: [],
+      entities: {},
+      sentiment: 'neutral',
+      relevanceScore: 50
+    };
+  }
+
+  /**
+   * Get model info for monitoring
+   */
+  getModelInfo(modelName) {
+    return this.models[modelName] || this.models['llama3.1-70b'];
+  }
+
+  /**
+   * Get cost estimate (approximate)
+   */
+  estimateCost(taskType, inputTokens, outputTokens) {
+    const model = this.selectModel(taskType);
+    const modelInfo = this.getModelInfo(model);
+    
+    // Rough cost estimates (adjust based on actual Cerebras pricing)
+    const costPerMillionTokens = {
+      'llama3.1-8b': 0.10,
+      'llama3.1-70b': 0.60,
+      'llama3.3-70b': 0.80
+    };
+    
+    const totalTokens = inputTokens + outputTokens;
+    const cost = (totalTokens / 1000000) * costPerMillionTokens[model];
+    
+    return {
+      model,
+      totalTokens,
+      estimatedCost: cost,
+      speed: modelInfo.speed
+    };
+  }
+}
+
+module.exports = new CerebrasService();

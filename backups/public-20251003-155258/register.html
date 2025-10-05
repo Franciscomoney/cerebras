@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Franciscomoney Intel</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        body {
+            background-color: hsl(var(--muted) / 0.4);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .auth-container {
+            background: hsl(var(--card));
+            padding: 2rem;
+            border-radius: calc(var(--radius) * 1.5);
+            border: 1px solid hsl(var(--border));
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+        
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .auth-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .auth-subtitle {
+            color: hsl(var(--muted-foreground));
+            font-size: 0.875rem;
+        }
+        
+        .links {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+        
+        .links a {
+            color: hsl(var(--muted-foreground));
+            text-decoration: none;
+            font-size: 0.875rem;
+        }
+        
+        .links a:hover {
+            color: hsl(var(--foreground));
+            text-decoration: underline;
+        }
+        
+        .form-text {
+            font-size: 0.75rem;
+            color: hsl(var(--muted-foreground));
+            margin-top: 0.25rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-header">
+            <h1 class="auth-title">Create an account</h1>
+            <p class="auth-subtitle">Enter your information to get started</p>
+        </div>
+        
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input 
+                    type="email" 
+                    id="email" 
+                    name="email" 
+                    class="form-control"
+                    required
+                    autocomplete="email"
+                    placeholder="name@example.com"
+                >
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-control"
+                    required
+                    autocomplete="new-password"
+                    placeholder="••••••••"
+                >
+                <div class="form-text">Must be at least 6 characters</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input 
+                    type="password" 
+                    id="confirmPassword" 
+                    name="confirmPassword" 
+                    class="form-control"
+                    required
+                    autocomplete="new-password"
+                    placeholder="••••••••"
+                >
+            </div>
+            
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+        </form>
+        
+        <div id="message" style="display: none; margin-top: 1rem;"></div>
+        
+        <div class="links">
+            <a href="/login">Already have an account? Sign in</a>
+            <br>
+            <a href="/">← Back to home</a>
+        </div>
+    </div>
+    
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const message = document.getElementById('message');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const formData = new FormData(e.target);
+            
+            // Client-side validation
+            const email = formData.get('email').trim();
+            const password = formData.get('password');
+            const confirmPassword = formData.get('confirmPassword');
+            
+            if (!email) {
+                showMessage('Please enter your email', 'error');
+                return;
+            }
+            
+            if (!password) {
+                showMessage('Please enter a password', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters', 'error');
+                return;
+            }
+            
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match', 'error');
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+            message.style.display = 'none';
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    }),
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    message.className = 'alert alert-success';
+                    message.innerHTML = '✅ Account created! Please check your email to verify your account.';
+                    message.style.display = 'block';
+                    
+                    // Clear form
+                    e.target.reset();
+                    submitBtn.textContent = 'Create Account';
+                    submitBtn.disabled = false;
+                } else {
+                    throw new Error(data.error || 'Registration failed');
+                }
+            } catch (error) {
+                showMessage(error.message, 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Create Account';
+            }
+        });
+        
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.className = 'alert alert-' + type;
+            message.textContent = text;
+            message.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
